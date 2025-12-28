@@ -12,7 +12,7 @@
 #'
 #' @details
 #' Objects of class \code{"distrib"} are typically created by constructor functions such as
-#' \code{\link{gaussian_distrib}} or \code{\link{poisson_distrib}}.
+#' \code{\link{gaussian_distrib}}.
 #'
 #'
 #' @section Structure:

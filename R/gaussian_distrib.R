@@ -1,3 +1,61 @@
+#' Gaussian `distrib` Object (Standard Deviation Parametrization)
+#'
+#' @description
+#' Creates a distribution object for the Gaussian distribution parameterized by mean (\eqn{\mu}) and standard deviation (\eqn{\sigma}).
+#'
+#' @param link_mu A link function object for the location parameter \eqn{\mu}.
+#'   Defaults to \code{\link[linkfunctions]{identity_link}}.
+#' @param link_sigma A link function object for the scale parameter \eqn{\sigma}.
+#'   Defaults to \code{\link[linkfunctions]{log_link}} to ensure positivity.
+#'
+#' @details
+#' The Gaussian distribution has the following density function:
+#' \deqn{f(y; \mu, \sigma) = \dfrac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\dfrac{1}{2}\left(\dfrac{y-\mu}{\sigma}\right)^2\right\}}
+#'
+#' \strong{Parameter Domains:}
+#' \itemize{
+#'   \item \eqn{\mu \in (-\infty, +\infty)}
+#'   \item \eqn{\sigma \in (0, +\infty)}
+#' }
+#'
+#' \strong{Explicit Formulas:}
+#'
+#' \emph{Cumulative Distribution Function (CDF):}
+#' \deqn{F(y; \mu, \sigma) = \Phi\left(\dfrac{y-\mu}{\sigma}\right)}
+#' where \eqn{\Phi} is the standard normal CDF.
+#'
+#' \emph{Quantile Function (QF):}
+#' \deqn{Q(p; \mu, \sigma) = \mu + \sigma \Phi^{-1}(p)}
+#'
+#' \emph{Gradient (Score Vector):}
+#' The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+#' \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y - \mu}{\sigma^2}}
+#' \deqn{\dfrac{\partial \ell}{\partial \sigma} = \dfrac{(y - \mu)^2 - \sigma^2}{\sigma^3}}
+#'
+#' \emph{Observed Hessian:}
+#' The second derivatives of the log-likelihood are:
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{1}{\sigma^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \sigma^2} = \dfrac{\sigma^2 - 3(y - \mu)^2}{\sigma^4}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma} = -\dfrac{2(y - \mu)}{\sigma^3}}
+#'
+#' \emph{Expected Hessian:}
+#' The expected values of the negative Hessian (used when \code{expected = TRUE}) are:
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\dfrac{1}{\sigma^2}}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \sigma^2}\right] = -\dfrac{2}{\sigma^2}}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma}\right] = 0}
+#'
+#' @return A list of class \code{"distrib"} containing:
+#' \item{distrib_name}{The name of the distribution ("gaussian").}
+#' \item{type}{The type of distribution ("continuous").}
+#' \item{params}{The names of the parameters ("mu", "sigma").}
+#' \item{params_bounds}{The bounds of the parameters.}
+#' \item{pdf, cdf, qf, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
+#' \item{gradient}{A function to calculate the gradient of the log-likelihood.}
+#' \item{hessian}{A function to calculate the Hessian matrix (observed or expected).}
+#'
+#' @importFrom linkfunctions identity_link log_link
+#' @importFrom stats dnorm pnorm qnorm rnorm
+#' @export
 gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link()) {
   o <- list()
   class(o) <- c("distrib")
@@ -96,5 +154,296 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     sqrt(2 * pi) * theta[["sigma"]]
   }
 
+  invisible(o)
+}
+
+
+
+
+
+#' Gaussian `distrib` Object (Variance Parameterization)
+#'
+#' @description
+#' Creates a distribution object for the Gaussian distribution parameterized by mean (\eqn{\mu}) and variance (\eqn{\sigma^2}).
+#'
+#' @param link_mu A link function object for the location parameter \eqn{\mu}.
+#'   Defaults to \code{\link[linkfunctions]{identity_link}}.
+#' @param link_sigma2 A link function object for the variance parameter \eqn{\sigma^2}.
+#'   Defaults to \code{\link[linkfunctions]{log_link}} to ensure positivity.
+#'
+#' @details
+#' The Gaussian distribution with variance parameterization has the following density function:
+#' \deqn{f(y; \mu, \sigma^2) = \dfrac{1}{\sqrt{2\pi\sigma^2}} \exp\left\{-\dfrac{(y-\mu)^2}{2\sigma^2}\right\}}
+#'
+#' \strong{Parameter Domains:}
+#' \itemize{
+#'   \item \eqn{\mu \in (-\infty, +\infty)}
+#'   \item \eqn{\sigma^2 \in (0, +\infty)}
+#' }
+#'
+#' \strong{Explicit Formulas:}
+#'
+#' \emph{Gradient (Score Vector):}
+#' The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+#' \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y - \mu}{\sigma^2}}
+#' \deqn{\dfrac{\partial \ell}{\partial \sigma^2} = \dfrac{(y - \mu)^2 - \sigma^2}{2(\sigma^2)^2}}
+#'
+#' \emph{Observed Hessian:}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{1}{\sigma^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial (\sigma^2)^2} = \dfrac{\sigma^2 - 2(y - \mu)^2}{2(\sigma^2)^3}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma^2} = -\dfrac{y - \mu}{(\sigma^2)^2}}
+#'
+#' \emph{Expected Hessian:}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\dfrac{1}{\sigma^2}}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial (\sigma^2)^2}\right] = -\dfrac{1}{2(\sigma^2)^2}}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma^2}\right] = 0}
+#'
+#' @return A list of class \code{"distrib"} containing the components for the Gaussian distribution (variance parameterization).
+#'
+#' @importFrom linkfunctions identity_link log_link
+#' @importFrom stats dnorm pnorm qnorm rnorm
+#' @export
+gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link()) {
+  o <- list()
+  class(o) <- c("distrib")
+  
+  o$distrib_name <- "gaussian"
+  o$type <- "continuous"
+  o$dimension <- 1
+  o$bounds <- c(-Inf, Inf)
+  
+  o$params <- c("mu", "sigma2")
+  o$n_params <- 2
+  o$params_bounds <- list(
+    mu = c(-Inf, Inf),
+    sigma2 = c(0, Inf)
+  )
+  o$link_params <- list(
+    mu = link_mu,
+    sigma2 = link_sigma2
+  )
+  
+  o$pdf <- function(y, theta, log = FALSE) {
+    stats::dnorm(
+      x = y,
+      mean = theta[["mu"]],
+      sd = sqrt(theta[["sigma2"]]),
+      log = log
+    )
+  }
+  
+  o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
+    stats::pnorm(
+      q = q,
+      mean = theta[["mu"]],
+      sd = sqrt(theta[["sigma2"]]),
+      lower.tail = lower.tail,
+      log.p = log.p
+    )
+  }
+  
+  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+    stats::qnorm(
+      p = p,
+      mean = theta[["mu"]],
+      sd = sqrt(theta[["sigma2"]]),
+      lower.tail = lower.tail,
+      log.p = log.p
+    )
+  }
+  
+  o$rng <- function(n, theta) {
+    stats::rnorm(
+      n = n,
+      mean = theta[["mu"]],
+      sd = sqrt(theta[["sigma2"]])
+    )
+  }
+  
+  o$loglik <- function(y, theta) {
+    o$pdf(y, theta, log = TRUE)
+  }
+  
+  o$gradient <- function(y, theta) {
+    sigma2 <- theta[["sigma2"]]
+    residuals <- y - theta[["mu"]]
+    list(
+      mu = residuals / sigma2,
+      sigma2 = (residuals^2 - sigma2) / (2 * sigma2*sigma2)
+    )
+  }
+  
+  o$hessian <- function(y, theta, expected = FALSE) {
+    sigma2 <- theta[["sigma2"]]
+    sigma4 <- sigma2*sigma2
+    if (expected) {
+      list(
+        mu_mu = -1 / sigma2,
+        sigma2_sigma2 = -1 / (2 * sigma4),
+        mu_sigma2 = 0
+      )
+    } else {
+      residuals <- y - theta[["mu"]]
+      list(
+        mu_mu = -1 / sigma2,
+        sigma2_sigma2 = (sigma2 - 2 * residuals^2) / (2 * sigma4*sigma2),
+        mu_sigma2 = -residuals / (sigma4)
+      )
+    }
+  }
+  
+  o$kernel <- function(y, theta) {
+    exp(-.5 * (y - theta[["mu"]])^2 / theta[["sigma2"]])
+  }
+  
+  o$normalization_constant <- function(y, theta) {
+    sqrt(2 * pi * theta[["sigma2"]])
+  }
+  
+  invisible(o)
+}
+
+
+
+
+
+#' Gaussian `distrib` Object (Precision Parameterization)
+#'
+#' @description
+#' Creates a distribution object for the Gaussian distribution parameterized by mean (\eqn{\mu}) and precision (\eqn{\tau = 1/\sigma^2}).
+#'
+#' @param link_mu A link function object for the location parameter \eqn{\mu}.
+#'   Defaults to \code{\link[linkfunctions]{identity_link}}.
+#' @param link_tau A link function object for the precision parameter \eqn{\tau}.
+#'   Defaults to \code{\link[linkfunctions]{log_link}} to ensure positivity.
+#'
+#' @details
+#' The Gaussian distribution with precision parameterization has the following density function:
+#' \deqn{f(y; \mu, \tau) = \sqrt{\dfrac{\tau}{2\pi}} \exp\left\{-\dfrac{\tau}{2}(y-\mu)^2\right\}}
+#'
+#' \strong{Parameter Domains:}
+#' \itemize{
+#'   \item \eqn{\mu \in (-\infty, +\infty)}
+#'   \item \eqn{\tau \in (0, +\infty)}
+#' }
+#'
+#' \strong{Explicit Formulas:}
+#'
+#' \emph{Gradient (Score Vector):}
+#' The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+#' \deqn{\dfrac{\partial \ell}{\partial \mu} = \tau(y - \mu)}
+#' \deqn{\dfrac{\partial \ell}{\partial \tau} = \dfrac{1}{2\tau} - \dfrac{(y - \mu)^2}{2}}
+#'
+#' \emph{Observed Hessian:}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\tau}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \tau^2} = -\dfrac{1}{2\tau^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \tau} = y - \mu}
+#'
+#' \emph{Expected Hessian (Fisher Information):}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\tau}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \tau^2}\right] = -\dfrac{1}{2\tau^2}}
+#' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \tau}\right] = 0}
+#'
+#' @return A list of class \code{"distrib"} containing the components for the Gaussian distribution (precision parameterization).
+#'
+#' @importFrom linkfunctions identity_link log_link
+#' @importFrom stats dnorm pnorm qnorm rnorm
+#' @export
+gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) {
+  o <- list()
+  class(o) <- c("distrib")
+  
+  o$distrib_name <- "gaussian"
+  o$type <- "continuous"
+  o$dimension <- 1
+  o$bounds <- c(-Inf, Inf)
+  
+  o$params <- c("mu", "tau")
+  o$n_params <- 2
+  o$params_bounds <- list(
+    mu = c(-Inf, Inf),
+    tau = c(0, Inf)
+  )
+  o$link_params <- list(
+    mu = link_mu,
+    tau = link_tau
+  )
+  
+  o$pdf <- function(y, theta, log = FALSE) {
+    stats::dnorm(
+      x = y,
+      mean = theta[["mu"]],
+      sd = 1 / sqrt(theta[["tau"]]),
+      log = log
+    )
+  }
+  
+  o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
+    stats::pnorm(
+      q = q,
+      mean = theta[["mu"]],
+      sd = 1 / sqrt(theta[["tau"]]),
+      lower.tail = lower.tail,
+      log.p = log.p
+    )
+  }
+  
+  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+    stats::qnorm(
+      p = p,
+      mean = theta[["mu"]],
+      sd = 1 / sqrt(theta[["tau"]]),
+      lower.tail = lower.tail,
+      log.p = log.p
+    )
+  }
+  
+  o$rng <- function(n, theta) {
+    stats::rnorm(
+      n = n,
+      mean = theta[["mu"]],
+      sd = 1 / sqrt(theta[["tau"]])
+    )
+  }
+  
+  o$loglik <- function(y, theta) {
+    o$pdf(y, theta, log = TRUE)
+  }
+  
+  o$gradient <- function(y, theta) {
+    tau <- theta[["tau"]]
+    residuals <- y - theta[["mu"]]
+    list(
+      mu = tau * residuals,
+      tau = (1 / (2 * tau)) - (residuals^2 / 2)
+    )
+  }
+  
+  o$hessian <- function(y, theta, expected = FALSE) {
+    tau <- theta[["tau"]]
+    if (expected) {
+      list(
+        mu_mu = -tau,
+        tau_tau = -1 / (2 * tau^2),
+        mu_tau = 0
+      )
+    } else {
+      residuals <- y - theta[["mu"]]
+      list(
+        mu_mu = -tau,
+        tau_tau = -1 / (2 * tau^2),
+        mu_tau = residuals
+      )
+    }
+  }
+  
+  o$kernel <- function(y, theta) {
+    exp(-.5 * (y - theta[["mu"]])^2 * theta[["tau"]])
+  }
+  
+  o$normalization_constant <- function(y, theta) {
+    sqrt(2 * pi / theta[["tau"]])
+  }
+  
   invisible(o)
 }

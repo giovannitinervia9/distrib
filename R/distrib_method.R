@@ -12,26 +12,18 @@ print.distrib <- function(x, ...) {
   cat(sprintf("Dimensions:   %d\n", x$dimension))
 
   cat("\nParameters:\n")
-
-  # Definiamo larghezze fisse per l'allineamento
   max_param_len <- max(nchar(x$params))
-
   for (i in seq_len(x$n_params)) {
     link_obj <- x$link_params[[i]]
     link_name <- link_obj$link_name
     bounds <- x$params_bounds[[i]]
-
-
     domain_str <- paste0(bounds[1], ", ", bounds[2])
-
-    # Stampa formattata
     cat(sprintf(
       "% -*s  |  Link: %-10s  |  Domain: %s\n",
       max_param_len, x$params[i],
-      link_name, # Nome link
-      domain_str # Intervallo
+      link_name,
+      domain_str
     ))
   }
   invisible(x)
 }
-print(gaussian_distrib())
