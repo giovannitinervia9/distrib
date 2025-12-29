@@ -20,7 +20,7 @@ A list of class \code{"distrib"} containing:
 \item{params}{The names of the parameters ("mu", "sigma").}
 \item{params_bounds}{The bounds of the parameters.}
 \item{pdf, cdf, qf, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
-\item{gradient}{A function to calculate the gradient of the log-likelihood.}
+\item{gradient}{A function to calculate the gradient of the log-pdf.}
 \item{hessian}{A function to calculate the Hessian matrix (observed or expected).}
 }
 \description{
@@ -29,6 +29,14 @@ Creates a distribution object for the Gaussian distribution parameterized by mea
 \details{
 The Gaussian distribution has the following density function:
 \deqn{f(y; \mu, \sigma) = \dfrac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\dfrac{1}{2}\left(\dfrac{y-\mu}{\sigma}\right)^2\right\}}
+
+\strong{Moments:}
+\itemize{
+\item Expected value: \eqn{\mathbb{E}(y) = \mu}
+\item Variance: \eqn{\mathbb{V}(y) = \sigma^2}
+\item Skewness: \eqn{\gamma_1 = 0}
+\item Excess Kurtosis: \eqn{\gamma_2 = 0}
+}
 
 \strong{Parameter Domains:}
 \itemize{
@@ -45,13 +53,13 @@ where \eqn{\Phi} is the standard normal CDF.
 \emph{Quantile Function (QF):}
 \deqn{Q(p; \mu, \sigma) = \mu + \sigma \Phi^{-1}(p)}
 
-\emph{Gradient (Score Vector):}
-The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+\emph{Gradient:}
+The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y - \mu}{\sigma^2}}
 \deqn{\dfrac{\partial \ell}{\partial \sigma} = \dfrac{(y - \mu)^2 - \sigma^2}{\sigma^3}}
 
 \emph{Observed Hessian:}
-The second derivatives of the log-likelihood are:
+The second derivatives of the log-pdf are:
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{1}{\sigma^2}}
 \deqn{\dfrac{\partial^2 \ell}{\partial \sigma^2} = \dfrac{\sigma^2 - 3(y - \mu)^2}{\sigma^4}}
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma} = -\dfrac{2(y - \mu)}{\sigma^3}}

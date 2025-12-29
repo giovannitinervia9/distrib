@@ -23,6 +23,14 @@ Creates a distribution object for the Gaussian distribution parameterized by mea
 The Gaussian distribution with precision parameterization has the following density function:
 \deqn{f(y; \mu, \tau) = \sqrt{\dfrac{\tau}{2\pi}} \exp\left\{-\dfrac{\tau}{2}(y-\mu)^2\right\}}
 
+\strong{Moments:}
+\itemize{
+\item Expected value: \eqn{\mathbb{E}(y) = \mu}
+\item Variance: \eqn{\mathbb{V}(y) = \dfrac{1}{\tau}}
+\item Skewness: \eqn{\gamma_1 = 0}
+\item Excess Kurtosis: \eqn{\gamma_2 = 0}
+}
+
 \strong{Parameter Domains:}
 \itemize{
 \item \eqn{\mu \in (-\infty, +\infty)}
@@ -31,8 +39,8 @@ The Gaussian distribution with precision parameterization has the following dens
 
 \strong{Explicit Formulas:}
 
-\emph{Gradient (Score Vector):}
-The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+\emph{Gradient:}
+The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 \deqn{\dfrac{\partial \ell}{\partial \mu} = \tau(y - \mu)}
 \deqn{\dfrac{\partial \ell}{\partial \tau} = \dfrac{1}{2\tau} - \dfrac{(y - \mu)^2}{2}}
 
@@ -41,7 +49,7 @@ The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters 
 \deqn{\dfrac{\partial^2 \ell}{\partial \tau^2} = -\dfrac{1}{2\tau^2}}
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \tau} = y - \mu}
 
-\emph{Expected Hessian (Fisher Information):}
+\emph{Expected Hessian:}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\tau}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \tau^2}\right] = -\dfrac{1}{2\tau^2}}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \tau}\right] = 0}

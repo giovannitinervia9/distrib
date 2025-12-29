@@ -12,6 +12,14 @@
 #' The Gaussian distribution has the following density function:
 #' \deqn{f(y; \mu, \sigma) = \dfrac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\dfrac{1}{2}\left(\dfrac{y-\mu}{\sigma}\right)^2\right\}}
 #'
+#' \strong{Moments:}
+#' \itemize{
+#'   \item Expected value: \eqn{\mathbb{E}(y) = \mu}
+#'   \item Variance: \eqn{\mathbb{V}(y) = \sigma^2}
+#'   \item Skewness: \eqn{\gamma_1 = 0}
+#'   \item Excess Kurtosis: \eqn{\gamma_2 = 0}
+#' }
+#'
 #' \strong{Parameter Domains:}
 #' \itemize{
 #'   \item \eqn{\mu \in (-\infty, +\infty)}
@@ -27,13 +35,13 @@
 #' \emph{Quantile Function (QF):}
 #' \deqn{Q(p; \mu, \sigma) = \mu + \sigma \Phi^{-1}(p)}
 #'
-#' \emph{Gradient (Score Vector):}
-#' The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+#' \emph{Gradient:}
+#' The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 #' \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y - \mu}{\sigma^2}}
 #' \deqn{\dfrac{\partial \ell}{\partial \sigma} = \dfrac{(y - \mu)^2 - \sigma^2}{\sigma^3}}
 #'
 #' \emph{Observed Hessian:}
-#' The second derivatives of the log-likelihood are:
+#' The second derivatives of the log-pdf are:
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{1}{\sigma^2}}
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \sigma^2} = \dfrac{\sigma^2 - 3(y - \mu)^2}{\sigma^4}}
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma} = -\dfrac{2(y - \mu)}{\sigma^3}}
@@ -50,7 +58,7 @@
 #' \item{params}{The names of the parameters ("mu", "sigma").}
 #' \item{params_bounds}{The bounds of the parameters.}
 #' \item{pdf, cdf, qf, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
-#' \item{gradient}{A function to calculate the gradient of the log-likelihood.}
+#' \item{gradient}{A function to calculate the gradient of the log-pdf.}
 #' \item{hessian}{A function to calculate the Hessian matrix (observed or expected).}
 #'
 #' @importFrom linkfunctions identity_link log_link
@@ -66,6 +74,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   o$bounds <- c(-Inf, Inf)
 
   o$params <- c("mu", "sigma")
+  o$params_interpretation <- c(mu = "mean", sigma = "standard deviation")
   o$n_params <- 2
   o$params_bounds <- list(
     mu = c(-Inf, Inf),
@@ -154,7 +163,23 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     sqrt(2 * pi) * theta[["sigma"]]
   }
 
-  invisible(o)
+  o$mean <- function(theta) {
+    theta[["mu"]]
+  }
+
+  o$variance <- function(theta) {
+    theta[["sigma"]]^2
+  }
+
+  o$skewness <- function(theta) {
+    0
+  }
+
+  o$kurtosis <- function(theta) {
+    0
+  }
+
+  o
 }
 
 
@@ -175,6 +200,14 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
 #' The Gaussian distribution with variance parameterization has the following density function:
 #' \deqn{f(y; \mu, \sigma^2) = \dfrac{1}{\sqrt{2\pi\sigma^2}} \exp\left\{-\dfrac{(y-\mu)^2}{2\sigma^2}\right\}}
 #'
+#' \strong{Moments:}
+#' \itemize{
+#'   \item Expected value: \eqn{\mathbb{E}(y) = \mu}
+#'   \item Variance: \eqn{\mathbb{V}(y) = \sigma^2}
+#'   \item Skewness: \eqn{\gamma_1 = 0}
+#'   \item Excess Kurtosis: \eqn{\gamma_2 = 0}
+#' }
+#'
 #' \strong{Parameter Domains:}
 #' \itemize{
 #'   \item \eqn{\mu \in (-\infty, +\infty)}
@@ -183,8 +216,8 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
 #'
 #' \strong{Explicit Formulas:}
 #'
-#' \emph{Gradient (Score Vector):}
-#' The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+#' \emph{Gradient:}
+#' The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 #' \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y - \mu}{\sigma^2}}
 #' \deqn{\dfrac{\partial \ell}{\partial \sigma^2} = \dfrac{(y - \mu)^2 - \sigma^2}{2(\sigma^2)^2}}
 #'
@@ -206,13 +239,14 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
 gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link()) {
   o <- list()
   class(o) <- c("distrib")
-  
+
   o$distrib_name <- "gaussian"
   o$type <- "continuous"
   o$dimension <- 1
   o$bounds <- c(-Inf, Inf)
-  
+
   o$params <- c("mu", "sigma2")
+  o$params_interpretation <- c(mu = "mean", sigma2 = "variance")
   o$n_params <- 2
   o$params_bounds <- list(
     mu = c(-Inf, Inf),
@@ -222,7 +256,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     mu = link_mu,
     sigma2 = link_sigma2
   )
-  
+
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dnorm(
       x = y,
@@ -231,7 +265,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
       log = log
     )
   }
-  
+
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::pnorm(
       q = q,
@@ -241,7 +275,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
       log.p = log.p
     )
   }
-  
+
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
@@ -251,7 +285,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
       log.p = log.p
     )
   }
-  
+
   o$rng <- function(n, theta) {
     stats::rnorm(
       n = n,
@@ -259,23 +293,23 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
       sd = sqrt(theta[["sigma2"]])
     )
   }
-  
+
   o$loglik <- function(y, theta) {
     o$pdf(y, theta, log = TRUE)
   }
-  
+
   o$gradient <- function(y, theta) {
     sigma2 <- theta[["sigma2"]]
     residuals <- y - theta[["mu"]]
     list(
       mu = residuals / sigma2,
-      sigma2 = (residuals^2 - sigma2) / (2 * sigma2*sigma2)
+      sigma2 = (residuals^2 - sigma2) / (2 * sigma2 * sigma2)
     )
   }
-  
+
   o$hessian <- function(y, theta, expected = FALSE) {
     sigma2 <- theta[["sigma2"]]
-    sigma4 <- sigma2*sigma2
+    sigma4 <- sigma2 * sigma2
     if (expected) {
       list(
         mu_mu = -1 / sigma2,
@@ -286,21 +320,37 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
       residuals <- y - theta[["mu"]]
       list(
         mu_mu = -1 / sigma2,
-        sigma2_sigma2 = (sigma2 - 2 * residuals^2) / (2 * sigma4*sigma2),
+        sigma2_sigma2 = (sigma2 - 2 * residuals^2) / (2 * sigma4 * sigma2),
         mu_sigma2 = -residuals / (sigma4)
       )
     }
   }
-  
+
   o$kernel <- function(y, theta) {
     exp(-.5 * (y - theta[["mu"]])^2 / theta[["sigma2"]])
   }
-  
+
   o$normalization_constant <- function(y, theta) {
     sqrt(2 * pi * theta[["sigma2"]])
   }
-  
-  invisible(o)
+
+  o$mean <- function(theta) {
+    theta[["mu"]]
+  }
+
+  o$variance <- function(theta) {
+    theta[["sigma2"]]
+  }
+
+  o$skewness <- function(theta) {
+    0
+  }
+
+  o$kurtosis <- function(theta) {
+    0
+  }
+
+  o
 }
 
 
@@ -321,6 +371,14 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 #' The Gaussian distribution with precision parameterization has the following density function:
 #' \deqn{f(y; \mu, \tau) = \sqrt{\dfrac{\tau}{2\pi}} \exp\left\{-\dfrac{\tau}{2}(y-\mu)^2\right\}}
 #'
+#' \strong{Moments:}
+#' \itemize{
+#'   \item Expected value: \eqn{\mathbb{E}(y) = \mu}
+#'   \item Variance: \eqn{\mathbb{V}(y) = \dfrac{1}{\tau}}
+#'   \item Skewness: \eqn{\gamma_1 = 0}
+#'   \item Excess Kurtosis: \eqn{\gamma_2 = 0}
+#' }
+#'
 #' \strong{Parameter Domains:}
 #' \itemize{
 #'   \item \eqn{\mu \in (-\infty, +\infty)}
@@ -329,8 +387,8 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 #'
 #' \strong{Explicit Formulas:}
 #'
-#' \emph{Gradient (Score Vector):}
-#' The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+#' \emph{Gradient:}
+#' The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 #' \deqn{\dfrac{\partial \ell}{\partial \mu} = \tau(y - \mu)}
 #' \deqn{\dfrac{\partial \ell}{\partial \tau} = \dfrac{1}{2\tau} - \dfrac{(y - \mu)^2}{2}}
 #'
@@ -339,7 +397,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \tau^2} = -\dfrac{1}{2\tau^2}}
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \tau} = y - \mu}
 #'
-#' \emph{Expected Hessian (Fisher Information):}
+#' \emph{Expected Hessian:}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\tau}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \tau^2}\right] = -\dfrac{1}{2\tau^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \tau}\right] = 0}
@@ -352,13 +410,14 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) {
   o <- list()
   class(o) <- c("distrib")
-  
+
   o$distrib_name <- "gaussian"
   o$type <- "continuous"
   o$dimension <- 1
   o$bounds <- c(-Inf, Inf)
-  
+
   o$params <- c("mu", "tau")
+  o$params_interpretation <- c(mu = "mean", tau = "precision")
   o$n_params <- 2
   o$params_bounds <- list(
     mu = c(-Inf, Inf),
@@ -368,7 +427,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     mu = link_mu,
     tau = link_tau
   )
-  
+
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dnorm(
       x = y,
@@ -377,7 +436,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
       log = log
     )
   }
-  
+
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::pnorm(
       q = q,
@@ -387,7 +446,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
       log.p = log.p
     )
   }
-  
+
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
@@ -397,7 +456,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
       log.p = log.p
     )
   }
-  
+
   o$rng <- function(n, theta) {
     stats::rnorm(
       n = n,
@@ -405,11 +464,11 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
       sd = 1 / sqrt(theta[["tau"]])
     )
   }
-  
+
   o$loglik <- function(y, theta) {
     o$pdf(y, theta, log = TRUE)
   }
-  
+
   o$gradient <- function(y, theta) {
     tau <- theta[["tau"]]
     residuals <- y - theta[["mu"]]
@@ -418,7 +477,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
       tau = (1 / (2 * tau)) - (residuals^2 / 2)
     )
   }
-  
+
   o$hessian <- function(y, theta, expected = FALSE) {
     tau <- theta[["tau"]]
     if (expected) {
@@ -436,14 +495,30 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
       )
     }
   }
-  
+
   o$kernel <- function(y, theta) {
     exp(-.5 * (y - theta[["mu"]])^2 * theta[["tau"]])
   }
-  
+
   o$normalization_constant <- function(y, theta) {
     sqrt(2 * pi / theta[["tau"]])
   }
-  
-  invisible(o)
+
+  o$mean <- function(theta) {
+    theta[["mu"]]
+  }
+
+  o$variance <- function(theta) {
+    1 / theta[["tau"]]
+  }
+
+  o$skewness <- function(theta) {
+    0
+  }
+
+  o$kurtosis <- function(theta) {
+    0
+  }
+
+  o
 }

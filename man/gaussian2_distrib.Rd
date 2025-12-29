@@ -23,6 +23,14 @@ Creates a distribution object for the Gaussian distribution parameterized by mea
 The Gaussian distribution with variance parameterization has the following density function:
 \deqn{f(y; \mu, \sigma^2) = \dfrac{1}{\sqrt{2\pi\sigma^2}} \exp\left\{-\dfrac{(y-\mu)^2}{2\sigma^2}\right\}}
 
+\strong{Moments:}
+\itemize{
+\item Expected value: \eqn{\mathbb{E}(y) = \mu}
+\item Variance: \eqn{\mathbb{V}(y) = \sigma^2}
+\item Skewness: \eqn{\gamma_1 = 0}
+\item Excess Kurtosis: \eqn{\gamma_2 = 0}
+}
+
 \strong{Parameter Domains:}
 \itemize{
 \item \eqn{\mu \in (-\infty, +\infty)}
@@ -31,8 +39,8 @@ The Gaussian distribution with variance parameterization has the following densi
 
 \strong{Explicit Formulas:}
 
-\emph{Gradient (Score Vector):}
-The derivatives of the log-likelihood \eqn{\ell} with respect to the parameters are:
+\emph{Gradient:}
+The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y - \mu}{\sigma^2}}
 \deqn{\dfrac{\partial \ell}{\partial \sigma^2} = \dfrac{(y - \mu)^2 - \sigma^2}{2(\sigma^2)^2}}
 

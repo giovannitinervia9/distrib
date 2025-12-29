@@ -2,7 +2,7 @@
 % Please edit documentation in R/poisson_distrib.R
 \name{poisson_distrib}
 \alias{poisson_distrib}
-\title{Poisson Distribution Object}
+\title{Poisson \code{distrib} Object}
 \usage{
 poisson_distrib(link_mu = log_link())
 }
@@ -19,6 +19,15 @@ Creates a distribution object for the Poisson distribution parameterized by the 
 \details{
 The Poisson distribution has the following probability mass function (PMF):
 \deqn{P(Y=y; \mu) = \dfrac{\mu^y e^{-\mu}}{y!}}
+for \eqn{y = 0, 1, 2, \dots}
+
+\strong{Moments:}
+\itemize{
+\item Expected value: \eqn{\mathbb{E}(y) = \mu}
+\item Variance: \eqn{\mathbb{V}(y) = \mu}
+\item Skewness: \eqn{\gamma_1 = \dfrac{1}{\sqrt{\mu}}}
+\item Excess Kurtosis: \eqn{\gamma_2 = \dfrac{1}{\mu}}
+}
 
 \strong{Parameter Domains:}
 \itemize{
@@ -27,16 +36,15 @@ The Poisson distribution has the following probability mass function (PMF):
 
 \strong{Explicit Formulas:}
 
-\emph{Log-Likelihood:}
-\deqn{\ell(\mu; y) = y \ln(\mu) - \mu - \ln(y!)}
-
-\emph{Gradient (Score Vector):}
-The derivative of the log-likelihood with respect to \eqn{\mu} is:
+\emph{Gradient:}
+The derivatives of the log-probability mass function \eqn{\ell} with respect to \eqn{\mu} are:
 \deqn{\dfrac{\partial \ell}{\partial \mu} = \dfrac{y}{\mu} - 1 = \dfrac{y - \mu}{\mu}}
 
-\emph{Observed Hessian:}
-\deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{y}{\mu^2}}
-
 \emph{Expected Hessian:}
+When \code{expected = TRUE}, substituting \eqn{\mathbb{E}[y]=\mu}, the expected second derivative of the log-probability mass function is:
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\dfrac{1}{\mu}}
+
+\emph{Observed Hessian:}
+The full analytical second derivative (dependent on observed \eqn{y}) is computed when \code{expected = FALSE}.
+\deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{y}{\mu^2}}
 }
