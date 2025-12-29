@@ -124,10 +124,9 @@ check_derivatives_distrib <- function(distrib, n = 10) {
 
   cat("----------------------------------------------------\n")
   cat("Distribution:", distrib$distrib_name, "\n")
-  cat("Max Relative Error (Grad): ", formatC(max_grad_err, format = "e", digits = 3), "\n")
-  cat("Max Relative Error (Hess): ", formatC(max_hess_err, format = "e", digits = 3), "\n")
+  cat("Max Relative Error (Grad): ", formatC(max_grad_err, format = "e", digits = 5), "\n")
+  cat("Max Relative Error (Hess): ", formatC(max_hess_err, format = "e", digits = 5), "\n")
 
-  # Soglia tolleranza errore relativo (1e-4 = 0.01%)
   threshold <- 1e-4
 
   if (!is.infinite(max_grad_err) && !is.infinite(max_hess_err) &&
@@ -179,7 +178,7 @@ check_expected_hessian_distrib <- function(distrib, n_sim = 50000, theta) {
       } else if (b[1] == 0 && is.infinite(b[2])) {
         theta[[p]] <- runif(1, 1.0, 5.0)
       } else {
-        mid <- if(is.infinite(b[1])) b[2] - 2 else if(is.infinite(b[2])) b[1] + 2 else mean(b)
+        mid <- if (is.infinite(b[1])) b[2] - 2 else if (is.infinite(b[2])) b[1] + 2 else mean(b)
         theta[[p]] <- runif(1, mid - 0.1, mid + 0.1)
       }
     }
@@ -198,17 +197,19 @@ check_expected_hessian_distrib <- function(distrib, n_sim = 50000, theta) {
   max_err <- 0
   for (name in names(H_expected_ana)) {
     val_ana <- H_expected_ana[[name]]
-    val_mc  <- H_observed_mean[[name]]
+    val_mc <- H_observed_mean[[name]]
     abs_diff <- abs(val_ana - val_mc)
 
     is_zero <- abs(val_ana) < 1e-8
-    err_val <- if(is_zero) abs_diff else abs_diff / abs(val_ana)
-    err_type <- if(is_zero) "AbsErr" else "RelErr"
+    err_val <- if (is_zero) abs_diff else abs_diff / abs(val_ana)
+    err_type <- if (is_zero) "AbsErr" else "RelErr"
 
     max_err <- max(max_err, err_val)
 
-    cat(sprintf("  %-15s | Exp: %9.5f | Mean Obs: %9.5f | %s: %.2e\n",
-                name, val_ana, val_mc, err_type, err_val))
+    cat(sprintf(
+      "  %-15s | Exp: %9.5f | Mean Obs: %9.5f | %s: %.2e\n",
+      name, val_ana, val_mc, err_type, err_val
+    ))
   }
 
   if (max_err < 0.05) {

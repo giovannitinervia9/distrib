@@ -196,5 +196,14 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
     6 * theta[["sigma2"]] / theta[["mu"]]^2
   }
 
+  o$mode <- function(theta) {
+    mu <- theta[["mu"]]
+    sigma2 <- theta[["sigma2"]]
+    alpha <- mu^2 / sigma2
+    ifelse(
+      alpha >= 1, (alpha - 1) / (mu / sigma2), 0
+    )
+  }
+
   o
 }

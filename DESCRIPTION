@@ -15,4 +15,5 @@ Depends:
 Remotes: 
     giovannitinervia9/linkfunctions
 Imports: 
-    numDeriv
+    numDeriv,
+    statmod

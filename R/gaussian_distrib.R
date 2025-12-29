@@ -163,7 +163,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     sqrt(2 * pi) * theta[["sigma"]]
   }
 
-  o$mean <- function(theta) {
+  o$mean <- o$median <- o$mode <- function(theta) {
     theta[["mu"]]
   }
 
@@ -334,7 +334,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     sqrt(2 * pi * theta[["sigma2"]])
   }
 
-  o$mean <- function(theta) {
+  o$mean <- o$median <- o$mode <- function(theta) {
     theta[["mu"]]
   }
 
@@ -504,7 +504,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     sqrt(2 * pi / theta[["tau"]])
   }
 
-  o$mean <- function(theta) {
+  o$mean <- o$median <- o$mode <- function(theta) {
     theta[["mu"]]
   }
 
