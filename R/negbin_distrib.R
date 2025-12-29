@@ -21,6 +21,7 @@
 #' }
 #'
 #' @return A list of class \code{"distrib"}.
+#' @importFrom stats dnbinom pnbinom qnbinom rnbinom
 #' @export
 negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o <- list()
@@ -42,7 +43,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
       x = y,
       mu = theta[["mu"]],
       size = theta[["theta"]],
-      log = log)
+      log = log
+    )
   }
 
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
@@ -51,7 +53,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
       mu = theta[["mu"]],
       size = theta[["theta"]],
       lower.tail = lower.tail,
-      log.p = log.p)
+      log.p = log.p
+    )
   }
 
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
@@ -60,14 +63,16 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
       mu = theta[["mu"]],
       size = theta[["theta"]],
       lower.tail = lower.tail,
-      log.p = log.p)
+      log.p = log.p
+    )
   }
 
   o$rng <- function(n, theta) {
     stats::rnbinom(
       n = n,
       mu = theta[["mu"]],
-      size = theta[["theta"]])
+      size = theta[["theta"]]
+    )
   }
 
   o$loglik <- function(y, theta) {
@@ -76,29 +81,42 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
 
   o$gradient <- function(y, theta) {
     mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    theta <- theta[["theta"]]
+    y_plus_theta <- y + theta
+    th_plus_mu <- theta + mu
+    th_frac_th_plus_mu <- theta / th_plus_mu
     list(
-      mu = th * (y - mu) / (mu * (mu + th)),
-      theta = digamma(y + th) - digamma(th) + log(th / (mu + th)) + (mu - y) / (mu + th)
+      mu = th_frac_th_plus_mu * (y / mu - 1),
+      theta = -digamma(theta) + digamma(y_plus_theta) + log(th_frac_th_plus_mu) - (y - mu) / (th_plus_mu)
     )
+  }
+
+  # function to compute expectation of trigamma(y + theta) for expected hessian
+  o$E_trigamma <- function(mu, theta, p = .999) {
+    mapply(\(mu, theta){
+      Y <- 0:pmax(100, qnbinom(p = p, size = theta, mu = mu))
+      sum(trigamma(Y + theta) * dnbinom(Y, size = theta, mu = mu))
+    }, mu = mu, theta = theta)
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
     mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    theta <- theta[["theta"]]
+    y_plus_theta <- y + theta
+    th_plus_mu <- theta + mu
+    th_frac_th_plus_mu <- theta / th_plus_mu
 
     if (expected) {
       list(
-        mu_mu = -th / (mu * (mu + th)),
-        theta_theta = -trigamma(th) + 1/th - 1/(mu + th),
-        mu_theta = -1 / (mu + th)
+        mu_mu = -theta / (mu * (th_plus_mu)),
+        theta_theta = mu / (theta * (th_plus_mu)) - trigamma(theta) + o$E_trigamma(mu, theta),
+        mu_theta = 0
       )
     } else {
-      # Hessiana osservata (seconda derivata della log-verosimiglianza)
       list(
-        mu_mu = -th * (y / mu^2 + th / (mu + th)^2),
-        theta_theta = -trigamma(y + th) + trigamma(th) - 1/th + 1/(mu + th) + (mu - y) / (mu + th)^2,
-        mu_theta = -(y - mu) / (mu + th)^2
+        mu_mu = y_plus_theta / (th_plus_mu)^2 - y / mu^2,
+        theta_theta = (y * theta + mu^2) / (theta * th_plus_mu^2) - trigamma(theta) + trigamma(y_plus_theta),
+        mu_theta = (y - mu) / (th_plus_mu)^2
       )
     }
   }
@@ -116,37 +134,14 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o$skewness <- function(theta) {
     mu <- theta[["mu"]]
     th <- theta[["theta"]]
-    (th + 2*mu) / sqrt(mu * th * (th + mu))
+    (th + 2 * mu) / sqrt(mu * th * (th + mu))
   }
 
   o$kurtosis <- function(theta) {
     mu <- theta[["mu"]]
     th <- theta[["theta"]]
-    6/th + (th + mu)^2 / (mu * th * (th + mu))
+    6 / th + (th + mu)^2 / (mu * th * (th + mu))
   }
 
   o
 }
-
-
-# rm(list = ls())
-# gc()
-# y <- rpois(1, 5)
-# mu <- rpois(1, 5)
-# theta <- rexp(1, .1)
-#
-#
-# # lpdf
-# log(Gamma(y+theta))-log(Gamma(theta))+theta*log(theta/(theta+mu))+y*log(mu/(theta+mu))
-#
-# # constants
-# th_plus_mu <- theta + mu
-# th_frac_th_plus_mu <- theta/th_plus_mu
-#
-#
-# # d_mu
-# th_frac_th_plus_mu*(y/mu - 1)
-#
-# # d_theta
-# -digamma(theta)
-#

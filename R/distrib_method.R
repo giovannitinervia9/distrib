@@ -7,7 +7,7 @@
 #' @export
 #' @method print distrib
 print.distrib <- function(x, ...) {
-  cat(sprintf("Distribution: %s\n", paste0(toupper(substring(x$distrib_name, 1, 1)), substring(x$distrib_name, 2))))
+  cat(sprintf("Distribution: %s\n", gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2", x$distrib_name, perl = TRUE)))
   cat(sprintf("Type:         %s\n", paste0(toupper(substring(x$type, 1, 1)), substring(x$type, 2))))
   cat(sprintf("Dimensions:   %d\n", x$dimension))
 
