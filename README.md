@@ -116,9 +116,18 @@ approximations (using finite differences).
 check_derivatives_distrib(nb, n = 10)
 #> ----------------------------------------------------
 #> Distribution: negative binomial 
-#> Max Relative Error (Grad):  8.10241e-11 
-#> Max Relative Error (Hess):  7.70490e-10
+#> Samples tested: 10 
+#> (Displaying worst-case discrepancy found across samples)
 #> 
+#> >>> Gradient Checks <<<
+#>   mu         | Ana: 3.7539e-01 | Num: 3.7539e-01 | Max RelErr: 6.338e-11
+#>   theta      | Ana: 1.2884e-02 | Num: 1.2884e-02 | Max RelErr: 1.568e-09
+#> 
+#> >>> Hessian Checks <<<
+#>   mu_mu        | Ana: 1.3667e-02 | Num: 1.3667e-02 | Max RelErr: 2.738e-11
+#>   theta_theta  | Ana: -1.1205e-03 | Num: -1.1205e-03 | Max RelErr: 7.705e-10
+#>   mu_theta     | Ana: -8.0392e-03 | Num: -8.0392e-03 | Max RelErr: 3.868e-11
+#> ----------------------------------------------------
 #> [OK] Analytical derivatives match numerical ones.
 #> ----------------------------------------------------
 ```
