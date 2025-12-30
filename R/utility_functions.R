@@ -3,26 +3,37 @@
 #' @description
 #' This utility function verifies the accuracy of the analytical gradient and Hessian
 #' implementations within a \code{"distrib"} object.
-#' It uses **Relative Error** for comparison.
+#' It compares analytical calculations against numerical approximations (via finite differences)
+#' and reports the maximum relative error **for each parameter individually**.
 #'
 #' @param distrib An object of class \code{"distrib"}.
-#' @param n Integer. The number of random parameter configurations and observations to generate for testing. Defaults to 10.
+#' @param n Integer. The number of random parameter configurations and observations to generate for testing. Defaults to 20.
 #'
 #' @details
-#' The validation compares analytical results vs numerical approximations (via finite differences).
-#' The error metric used is the **Relative Error**:
-#' \deqn{Err = \frac{|x_{ana} - x_{num}|}{\max(|x_{ana}|, 10^{-10})}}
-#' The denominator floor (\eqn{10^{-10}}) prevents division by zero when the analytical derivative is exactly 0.
+#' The validation generates \code{n} random parameter sets and observations based on the
+#' bounds defined in the distribution object. It then calculates:
+#' \itemize{
+#'   \item **Gradient:** The analytical gradient vs numeric gradient (`numDeriv::grad`).
+#'   \item **Hessian:** The analytical observed Hessian vs numeric Hessian (`numDeriv::hessian`).
+#' }
 #'
-#' @return Invisibly returns a named numeric vector containing the maximum relative errors.
+#' The error metric used is the **Relative Error** (robust):
+#' \deqn{Err = \frac{|x_{ana} - x_{num}|}{\max(|x_{ana}|, 10^{-10})}}
+#'
+#' A detailed report is printed to the console showing the worst-case scenario (Maximum Error)
+#' found for each parameter across the `n` samples.
+#'
+#' @return Invisibly returns a list containing the error statistics.
 #'
 #' @importFrom stats runif rnorm
+#' @importFrom numDeriv grad hessian
 #' @export
-check_derivatives_distrib <- function(distrib, n = 10) {
+check_derivatives_distrib <- function(distrib, n = 20) {
   params <- distrib$params
   n_params <- distrib$n_params
   params_bounds <- distrib$params_bounds
 
+  # --- 1. Generazione Parametri Casuali ---
   theta <- vector("list", n_params)
   names(theta) <- params
 
@@ -43,27 +54,40 @@ check_derivatives_distrib <- function(distrib, n = 10) {
     }
   }
 
+  # --- 2. Generazione Dati (y) e Calcolo Analitico ---
   y <- distrib$rng(n, theta)
 
+  # Analitico (Vettorizzato)
   ana_grad_list <- distrib$gradient(y, theta)
   ana_hess_list <- distrib$hessian(y, theta, expected = FALSE)
+  hess_names <- names(ana_hess_list)
 
-  grad_errs <- numeric(n)
-  hess_errs <- numeric(n)
+  # --- 3. Strutture per tracciare il "Worst Case" ---
+  # Usiamo data.frame per tenere traccia di Valore Ana, Valore Num e Errore Max
 
+  stats_grad <- data.frame(
+    name = params, max_err = -1, worst_ana = NA, worst_num = NA,
+    stringsAsFactors = FALSE, row.names = params
+  )
+
+  stats_hess <- data.frame(
+    name = hess_names, max_err = -1, worst_ana = NA, worst_num = NA,
+    stringsAsFactors = FALSE, row.names = hess_names
+  )
 
   calc_rel_error <- function(ana, num) {
     denominator <- max(abs(ana), 1e-10)
     abs(ana - num) / denominator
   }
 
+  # --- 4. Loop di confronto Numerico ---
   for (i in 1:n) {
+    # Vettore theta corrente
     theta_vec <- numeric(n_params)
     names(theta_vec) <- params
-    for (p in params) {
-      theta_vec[p] <- theta[[p]][i]
-    }
+    for (p in params) theta_vec[p] <- theta[[p]][i]
 
+    # Wrapper per numDeriv
     lpdf <- function(x) {
       t_list <- as.list(x)
       names(t_list) <- params
@@ -74,70 +98,82 @@ check_derivatives_distrib <- function(distrib, n = 10) {
       return(val)
     }
 
+    # Gradient Check
     num_g <- numDeriv::grad(func = lpdf, x = theta_vec)
-    ana_g <- numeric(n_params)
     for (k in 1:n_params) {
       p_name <- params[k]
-      ana_g[k] <- ana_grad_list[[p_name]][i]
+      val_ana <- ana_grad_list[[p_name]][i]
+      val_num <- num_g[k]
+      err <- calc_rel_error(val_ana, val_num)
+
+      if (err > stats_grad[p_name, "max_err"]) {
+        stats_grad[p_name, "max_err"] <- err
+        stats_grad[p_name, "worst_ana"] <- val_ana
+        stats_grad[p_name, "worst_num"] <- val_num
+      }
     }
 
-    errs_g <- calc_rel_error(ana_g, num_g)
-
-    if (any(is.na(errs_g))) {
-      grad_errs[i] <- Inf
-    } else {
-      grad_errs[i] <- max(errs_g)
-    }
-
+    # Hessian Check
     num_h <- numDeriv::hessian(func = lpdf, x = theta_vec)
-    hess_names <- names(ana_hess_list)
-    current_hess_err <- 0
-
     for (h_name in hess_names) {
       val_ana <- ana_hess_list[[h_name]][i]
 
       parts <- strsplit(h_name, "_")[[1]]
       idx_row <- match(parts[1], params)
-      if (length(parts) == 2) {
-        idx_col <- match(parts[2], params)
-      } else {
-        idx_col <- match(parts[length(parts)], params)
-      }
-
+      idx_col <- match(parts[length(parts)], params)
       val_num <- num_h[idx_row, idx_col]
 
       if (is.na(val_num) || is.nan(val_num)) {
-        err_val <- Inf
+        err <- Inf
       } else {
-        err_val <- calc_rel_error(val_ana, val_num)
+        err <- calc_rel_error(val_ana, val_num)
       }
 
-      if (!is.na(err_val) && err_val > current_hess_err) {
-        current_hess_err <- err_val
+      if (err > stats_hess[h_name, "max_err"]) {
+        stats_hess[h_name, "max_err"] <- err
+        stats_hess[h_name, "worst_ana"] <- val_ana
+        stats_hess[h_name, "worst_num"] <- val_num
       }
     }
-    hess_errs[i] <- current_hess_err
   }
 
-  max_grad_err <- max(grad_errs, na.rm = TRUE)
-  max_hess_err <- max(hess_errs, na.rm = TRUE)
+  # --- 5. Stampa Report ---
+  global_max_grad <- max(stats_grad$max_err)
+  global_max_hess <- max(stats_hess$max_err)
 
   cat("----------------------------------------------------\n")
   cat("Distribution:", distrib$distrib_name, "\n")
-  cat("Max Relative Error (Grad): ", formatC(max_grad_err, format = "e", digits = 5), "\n")
-  cat("Max Relative Error (Hess): ", formatC(max_hess_err, format = "e", digits = 5), "\n")
+  cat("Samples tested:", n, "\n")
+  cat("(Displaying worst-case discrepancy found across samples)\n\n")
+
+  cat(">>> Gradient Checks <<<\n")
+  for (r in 1:nrow(stats_grad)) {
+    cat(sprintf(
+      "  %-10s | Ana: %10.4e | Num: %10.4e | Max RelErr: %.3e\n",
+      stats_grad$name[r], stats_grad$worst_ana[r], stats_grad$worst_num[r], stats_grad$max_err[r]
+    ))
+  }
+  cat("\n")
+
+  cat(">>> Hessian Checks <<<\n")
+  for (r in 1:nrow(stats_hess)) {
+    cat(sprintf(
+      "  %-12s | Ana: %10.4e | Num: %10.4e | Max RelErr: %.3e\n",
+      stats_hess$name[r], stats_hess$worst_ana[r], stats_hess$worst_num[r], stats_hess$max_err[r]
+    ))
+  }
+
+  cat("----------------------------------------------------\n")
 
   threshold <- 1e-4
-
-  if (!is.infinite(max_grad_err) && !is.infinite(max_hess_err) &&
-    max_grad_err < threshold && max_hess_err < threshold) {
-    message("\n[OK] Analytical derivatives match numerical ones.\n")
+  if (global_max_grad < threshold && global_max_hess < threshold) {
+    message("[OK] Analytical derivatives match numerical ones.")
   } else {
-    warning("\n[WARNING] Discrepancies detected. Check formulas.\n")
+    warning("[WARNING] Discrepancies detected. See detailed table above.")
   }
   cat("----------------------------------------------------\n")
 
-  invisible(c(grad_error = max_grad_err, hess_error = max_hess_err))
+  invisible(list(grad = stats_grad, hess = stats_hess))
 }
 
 

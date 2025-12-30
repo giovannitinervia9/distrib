@@ -4,24 +4,33 @@
 \alias{check_derivatives_distrib}
 \title{Check Analytical Derivatives against Numerical Approximations}
 \usage{
-check_derivatives_distrib(distrib, n = 10)
+check_derivatives_distrib(distrib, n = 20)
 }
 \arguments{
 \item{distrib}{An object of class \code{"distrib"}.}
 
-\item{n}{Integer. The number of random parameter configurations and observations to generate for testing. Defaults to 10.}
+\item{n}{Integer. The number of random parameter configurations and observations to generate for testing. Defaults to 20.}
 }
 \value{
-Invisibly returns a named numeric vector containing the maximum relative errors.
+Invisibly returns a list containing the error statistics.
 }
 \description{
 This utility function verifies the accuracy of the analytical gradient and Hessian
 implementations within a \code{"distrib"} object.
-It uses \strong{Relative Error} for comparison.
+It compares analytical calculations against numerical approximations (via finite differences)
+and reports the maximum relative error \strong{for each parameter individually}.
 }
 \details{
-The validation compares analytical results vs numerical approximations (via finite differences).
-The error metric used is the \strong{Relative Error}:
+The validation generates \code{n} random parameter sets and observations based on the
+bounds defined in the distribution object. It then calculates:
+\itemize{
+\item \strong{Gradient:} The analytical gradient vs numeric gradient (\code{numDeriv::grad}).
+\item \strong{Hessian:} The analytical observed Hessian vs numeric Hessian (\code{numDeriv::hessian}).
+}
+
+The error metric used is the \strong{Relative Error} (robust):
 \deqn{Err = \frac{|x_{ana} - x_{num}|}{\max(|x_{ana}|, 10^{-10})}}
-The denominator floor (\eqn{10^{-10}}) prevents division by zero when the analytical derivative is exactly 0.
+
+A detailed report is printed to the console showing the worst-case scenario (Maximum Error)
+found for each parameter across the \code{n} samples.
 }
