@@ -117,9 +117,9 @@ check_derivatives_distrib(nb, n = 10)
 #> ----------------------------------------------------
 #> Distribution: negative binomial 
 #> Max Relative Error (Grad):  8.10241e-11 
-#> Max Relative Error (Hess):  7.70490e-10 
+#> Max Relative Error (Hess):  7.70490e-10
 #> 
-#> [32m[OK] Analytical derivatives match numerical ones.[0m
+#> [OK] Analytical derivatives match numerical ones.
 #> ----------------------------------------------------
 ```
 
@@ -135,6 +135,6 @@ check_expected_hessian_distrib(nb, n_sim = 100000, theta = theta)
 #>   theta_theta     | Exp:  -0.00858 | Mean Obs:  -0.00852 | RelErr: 7.85e-03
 #>   mu_theta        | Exp:   0.00000 | Mean Obs:   0.00009 | AbsErr: 8.99e-05
 #> 
-#> [32m[OK] Expected Hessian aligns with Mean Observed Hessian.[0m
+#> [OK] Expected Hessian aligns with Mean Observed Hessian.
 #> ----------------------------------------------------
 ```
