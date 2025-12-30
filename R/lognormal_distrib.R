@@ -130,7 +130,6 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$hessian <- function(y, theta, expected = FALSE) {
     mu <- theta[["mu"]]
     sigma2 <- theta[["sigma2"]]
-    log_y <- log(y)
     sigma22 <- sigma2 * sigma2
 
     if (expected) {
@@ -140,11 +139,12 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
         mu_sigma2 = 0
       )
     } else {
-      res <- y - mu
+      log_y <- log(y)
+      res <- (log_y - mu)
       list(
         mu_mu = -1 / sigma2,
-        sigma2_sigma2 = -(log_y - mu)^2 / sigma22 * sigma2 + .5 / sigma22,
-        mu_sigma2 = -(log_y - mu) / sigma22
+        sigma2_sigma2 = -res^2 / (sigma22 * sigma2) + .5 / sigma22,
+        mu_sigma2 = -res / sigma22
       )
     }
   }
