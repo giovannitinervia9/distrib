@@ -180,19 +180,30 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
     )
   }
 
-  o$kernel <- function(y, theta) {
+  o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[["mu"]]
     phi <- theta[["phi"]]
     alpha <- mu * phi
     beta <- (1 - mu) * phi
-    # Note: Kernel in log space to avoid underflow, then exp
-    exp((alpha - 1) * log(y) + (beta - 1) * log(1 - y))
+
+    k <- (alpha - 1) * log(y) + (beta - 1) * log(1 - y)
+
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
+  o$normalization_constant <- function(theta, log = TRUE) {
     mu <- theta[["mu"]]
     phi <- theta[["phi"]]
-    beta(mu * phi, (1 - mu) * phi)
+    z <- lbeta(mu * phi, (1 - mu) * phi)
+    if (log) {
+      z
+    } else {
+      exp(z)
+    }
   }
 
   o$mean <- function(theta) {

@@ -149,15 +149,27 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     }
   }
 
-  o$kernel <- function(y, theta) {
+  o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[["mu"]]
     sigma2 <- theta[["sigma2"]]
 
-    exp(-.5 * (log(y) - mu)^2 / sigma2 - log(y))
+    k <- -.5 * (log(y) - mu)^2 / sigma2 - log(y)
+
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    sqrt(2 * pi * theta[["sigma2"]])
+  o$normalization_constant <- function(theta, log = TRUE) {
+    z <- sqrt(2 * pi * theta[["sigma2"]])
+
+    if (log) {
+      log(z)
+    } else {
+      z
+    }
   }
 
   o$mean <- function(theta) {

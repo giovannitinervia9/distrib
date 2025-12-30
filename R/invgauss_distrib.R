@@ -162,14 +162,26 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
     }
   }
 
-  o$kernel <- function(y, theta) {
+  o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[["mu"]]
     phi <- theta[["phi"]]
-    exp(-.5 * (y - mu)^2 / (phi * mu^2 * y) - 1.5 * log(y))
+    k <- -.5 * (y - mu)^2 / (phi * mu^2 * y) - 1.5 * log(y)
+
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    sqrt(2 * pi * theta[["phi"]])
+  o$normalization_constant <- function(theta, log = TRUE) {
+    z <- sqrt(2 * pi * theta[["phi"]])
+
+    if (log) {
+      log(z)
+    } else {
+      z
+    }
   }
 
   o$mean <- function(theta) {

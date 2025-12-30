@@ -164,20 +164,31 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
     }
   }
 
-  o$kernel <- function(y, theta) {
+  o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[["mu"]]
     sigma2 <- theta[["sigma2"]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
-    exp((mu2_sigma2 - 1) * log(y) - y * mu_sigma2)
+    k <- (mu2_sigma2 - 1) * log(y) - y * mu_sigma2
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
+  o$normalization_constant <- function(theta, log = TRUE) {
     mu <- theta[["mu"]]
     sigma2 <- theta[["sigma2"]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
-    gamma(mu2_sigma2) / ((mu_sigma2)^(mu2_sigma2))
+    k <- lgamma(mu2_sigma2) - mu2_sigma2 * log(mu_sigma2)
+
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
   o$mean <- function(theta) {

@@ -155,12 +155,23 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     }
   }
 
-  o$kernel <- function(y, theta) {
-    exp(-.5 * ((y - theta[["mu"]]) / theta[["sigma"]])^2)
+  o$kernel <- function(y, theta, log = TRUE) {
+    k <- -.5 * ((y - theta[["mu"]]) / theta[["sigma"]])^2
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    sqrt(2 * pi) * theta[["sigma"]]
+  o$normalization_constant <- function(theta, log = TRUE) {
+    z <- sqrt(2 * pi) * theta[["sigma"]]
+
+    if (log) {
+      log(z)
+    } else {
+      z
+    }
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {
@@ -326,12 +337,22 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     }
   }
 
-  o$kernel <- function(y, theta) {
-    exp(-.5 * (y - theta[["mu"]])^2 / theta[["sigma2"]])
+  o$kernel <- function(y, theta, log = TRUE) {
+    k <- -.5 * (y - theta[["mu"]])^2 / theta[["sigma2"]]
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    sqrt(2 * pi * theta[["sigma2"]])
+  o$normalization_constant <- function(theta, log = TRUE) {
+    z <- sqrt(2 * pi * theta[["sigma2"]])
+    if (log) {
+      log(z)
+    } else {
+      z
+    }
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {
@@ -496,12 +517,22 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     }
   }
 
-  o$kernel <- function(y, theta) {
-    exp(-.5 * (y - theta[["mu"]])^2 * theta[["tau"]])
+  o$kernel <- function(y, theta, log = TRUE) {
+    k <- -.5 * (y - theta[["mu"]])^2 * theta[["tau"]]
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    sqrt(2 * pi / theta[["tau"]])
+  o$normalization_constant <- function(theta, log = TRUE) {
+    z <- sqrt(2 * pi / theta[["tau"]])
+    if (log) {
+      log(z)
+    } else {
+      z
+    }
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {

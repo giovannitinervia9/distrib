@@ -199,17 +199,29 @@ student_t_distrib <- function(
     }
   }
 
-  o$kernel <- function(y, theta) {
+  o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[["mu"]]
     sigma <- theta[["sigma"]]
     nu <- theta[["nu"]]
     z <- (y - mu) / sigma
-    exp(-.5 * (nu + 1) * log(1 + z^2 / nu))
+    k <- -.5 * (nu + 1) * log(1 + z^2 / nu)
+
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
+  o$normalization_constant <- function(theta, log = TRUE) {
     nu <- theta[["nu"]]
-    exp(lgamma(.5 * nu) + .5 * log(nu * pi) - lgamma(.5 * (nu + 1)) + log(theta[["sigma"]]))
+    z <- lgamma(.5 * nu) + .5 * log(nu * pi) - lgamma(.5 * (nu + 1)) + log(theta[["sigma"]])
+
+    if (log) {
+      z
+    } else {
+      exp(z)
+    }
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {

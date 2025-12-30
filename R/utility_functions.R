@@ -255,3 +255,77 @@ check_expected_hessian_distrib <- function(distrib, n_sim = 50000, theta) {
   }
   cat("----------------------------------------------------\n")
 }
+
+
+
+
+
+#' Check Consistency of Parameter Dimensions
+#'
+#' Validates that all elements in the provided parameter list have compatible lengths.
+#' Each parameter must have a length of either 1 (scalar) or exactly equal to
+#' `max_length`. This ensures safe vector recycling and dimensional consistency.
+#'
+#' @param theta A named list of vectors (parameters). Each element represents
+#'   a parameter of a distribution (e.g., `mu`, `sigma`).
+#' @param max_length (Optional) An integer specifying the required maximum length.
+#'   If not provided, it defaults to the maximum length found among the elements
+#'   of `theta`. Providing this argument allows validation against an external
+#'   dimension (e.g., sample size `n`).
+#'
+#' @return Returns `NULL` invisibly if the check passes.
+#'
+#' @section Errors:
+#' The function throws an error (`stop`) if it detects any parameter with a length
+#' that is neither 1 nor `max_length`. The error message lists the specific parameters
+#' causing the mismatch.
+#'
+#' @examples
+#' # --- Case 1: Implicit max length ---
+#' # Valid: all scalars
+#' check_params_dim(list(mu = 1, sigma = 2))
+#'
+#' # Valid: mixing scalar and vector
+#' check_params_dim(list(mu = 1:5, sigma = 1))
+#'
+#' # Invalid: incompatible lengths (2 vs 3)
+#' \dontrun{
+#' check_params_dim(list(mu = 1:2, sigma = 1:3))
+#' }
+#'
+#' # --- Case 2: Explicit max_length ---
+#' # Valid: vector matches max_length (5)
+#' check_params_dim(list(mu = 1:5, sigma = 1), max_length = 5)
+#'
+#' # Invalid: vector length (3) does not match required max_length (5)
+#' # This is useful to enforce consistency with a dataset size n = 5
+#' \dontrun{
+#' check_params_dim(list(mu = 1:3, sigma = 1), max_length = 5)
+#' }
+#'
+#' @export
+check_params_dim <- function(theta, max_length) {
+  len_theta <- lengths(theta)
+
+  if (missing(max_length)) {
+    max_length <- max(len_theta)
+  }
+
+  # Check: length must be 1 OR exactly max_length
+  mismatch_idx <- which(len_theta != 1 & len_theta != max_length)
+
+  if (length(mismatch_idx) > 0) {
+    bad_params <- names(theta)[mismatch_idx]
+    bad_lens <- len_theta[mismatch_idx]
+
+    error_msg <- paste0(
+      "Parameter dimension mismatch. All parameters should have length 1 or ", max_length, ".\n",
+      "Found mismatches in:\n",
+      paste(paste0("  - ", bad_params, ": length ", bad_lens), collapse = "\n")
+    )
+
+    stop(error_msg, call. = FALSE)
+  }
+
+  invisible(NULL)
+}

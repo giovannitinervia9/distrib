@@ -123,13 +123,22 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     }
   }
 
-  o$kernel <- function(y, theta) {
+  o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[["mu"]]
-    exp(y * log(mu / (1 - mu)) + log(1 - mu))
+    k <- y * log(mu / (1 - mu)) + log(1 - mu)
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    1
+  o$normalization_constant <- function(theta, log = TRUE) {
+    if (log) {
+      0
+    } else {
+      1
+    }
   }
 
   o$mean <- function(theta) {

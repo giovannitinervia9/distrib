@@ -118,12 +118,22 @@ poisson_distrib <- function(link_mu = log_link()) {
     }
   }
 
-  o$kernel <- function(y, theta) {
-    exp(y * log(theta[["mu"]]) - lfactorial(y))
+  o$kernel <- function(y, theta, log = TRUE) {
+    k <- y * log(theta[["mu"]]) - lfactorial(y)
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
   }
 
-  o$normalization_constant <- function(y, theta) {
-    exp(theta[["mu"]])
+  o$normalization_constant <- function(theta, log = TRUE) {
+    z <- theta[["mu"]]
+    if (log) {
+      z
+    } else {
+      exp(z)
+    }
   }
 
   o$mean <- function(theta) {
