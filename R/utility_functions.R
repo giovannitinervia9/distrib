@@ -131,9 +131,9 @@ check_derivatives_distrib <- function(distrib, n = 10) {
 
   if (!is.infinite(max_grad_err) && !is.infinite(max_hess_err) &&
     max_grad_err < threshold && max_hess_err < threshold) {
-    cat("\n\033[32m[OK] Analytical derivatives match numerical ones.\033[0m\n")
+    message("\n[OK] Analytical derivatives match numerical ones.\n")
   } else {
-    cat("\n\033[31m[WARNING] Discrepancies detected. Check formulas.\033[0m\n")
+    warning("\n[WARNING] Discrepancies detected. Check formulas.\n")
   }
   cat("----------------------------------------------------\n")
 
@@ -213,9 +213,9 @@ check_expected_hessian_distrib <- function(distrib, n_sim = 50000, theta) {
   }
 
   if (max_err < 0.05) {
-    cat("\n\033[32m[OK] Expected Hessian aligns with Mean Observed Hessian.\033[0m\n")
+    message("\n[OK] Expected Hessian aligns with Mean Observed Hessian.\n")
   } else {
-    cat("\n\033[31m[WARNING] Large discrepancy detected.\033[0m\n")
+    warning("\n[WARNING] Large discrepancy detected.\n")
   }
   cat("----------------------------------------------------\n")
 }

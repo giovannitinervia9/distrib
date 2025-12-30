@@ -1,0 +1,108 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+library(distrib)
+```
+
+# distrib
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of `distrib` is to provide a unified, object-oriented framework for probability distributions in R.
+
+Unlike standard R distribution functions (e.g., `dnorm`, `pnorm`), `distrib` wraps each distribution into a standardized S3 object that includes:
+
+- **Analytical Derivatives**: Gradients and Hessians (observed and expected) ready for Maximum Likelihood Estimation.
+
+- **Link Functions**: Built-in handling of parameter link functions (via the `linkfunctions` package).
+
+- **Validation Tools**: Utilities to automatically verify analytical derivatives against numerical approximations.
+
+## Installation
+
+You can install the development version of distrib from [GitHub](https://github.com/) with:
+
+```{r message=FALSE, warning=FALSE}
+# install.packages("pak")
+pak::pak("giovannitinervia9/distrib")
+```
+
+
+## Example
+
+This is a basic example showing how to initialize a distribution and interact with its methods.
+
+### 1. Initialize a Distribution
+
+Let's use the Negative Binomial distribution (NB2 parametrization).
+
+```{r}
+# Initialize the distribution object
+nb <- negbin_distrib()
+
+# The print method gives a clear summary of parameters and domains
+nb
+```
+
+### 2. Compute Probabilities and Derivatives
+
+You can compute the log-likelihood, gradient, and Hessian for specific data and parameters.
+
+```{r}
+# Define parameters
+theta <- list(mu = 10, theta = 5)
+
+# Generate synthetic data
+set.seed(123)
+y <- nb$rng(n = 5, theta = theta)
+
+# Compute Log-Likelihood contributions
+ll <- nb$loglik(y, theta)
+head(ll)
+sum(ll)
+
+# Compute Analytical Gradient (Score)
+grad <- nb$gradient(y, theta)
+str(grad)
+
+# Compute Analytical Hessian (Observed)
+hess <- nb$hessian(y, theta, expected = FALSE)
+str(hess)
+```
+
+
+### 3. Visualization
+The package includes a generic `plot` method to visualize the PDF/PMF instantly.
+```{r}
+# Visualize the PMF for the given parameters
+plot(nb, theta)
+```
+
+
+### 4. Validation
+A key feature of `distrib` is the ability to self-validate. You can check if the analytical gradients and Hessians match numerical approximations (using finite differences).
+
+```{r}
+# Check analytical derivatives against numerical ones
+check_derivatives_distrib(nb, n = 10)
+```
+
+```{r}
+# Check expected hessian via Monte-Carlo simulation
+check_expected_hessian_distrib(nb, n_sim = 100000, theta = theta)
+```
+
+
+
+

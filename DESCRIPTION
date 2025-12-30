@@ -1,9 +1,9 @@
 Package: distrib
-Title: What the Package Does (One Line, Title Case)
+Title: S3 Framework for Probability Distributions
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
+Description: Provides a consistent S3 object-oriented infrastructure for probability distributions. Each 'distrib' object encapsulates standard statistical functions (PDF, CDF, Quantile) alongside analytical gradients, Hessians, and link functions. The package includes robust validation tools to verify analytical derivatives against numerical approximations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
