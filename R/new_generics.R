@@ -112,3 +112,21 @@ skewness <- function(x, ...) {
 kurtosis <- function(x, ...) {
   UseMethod("kurtosis")
 }
+
+
+
+
+#' Cumulative Distribution Function
+#'
+#' @description
+#' A generic function to compute the Cumulative Distribution Function (CDF)
+#' for a given distribution object.
+#'
+#' @param x An object representing a probability distribution.
+#' @param ... Additional arguments passed to specific methods.
+#'
+#' @return A vector of probabilities corresponding to the calculated CDF.
+#' @export
+cdf <- function(x, ...) {
+  UseMethod("cdf")
+}

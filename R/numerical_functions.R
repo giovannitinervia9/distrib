@@ -418,3 +418,125 @@ kurtosis.distrib <- function(x, theta, use_moment = FALSE, ...) {
   }
   res
 }
+
+
+
+
+#' Cumulative Distribution Function for 'distrib' Objects
+#'
+#' @description
+#' Computes the Cumulative Distribution Function (CDF) for a custom distribution
+#' object of class \code{distrib}. This method relies on numerical integration (for continuous
+#' distributions) or summation (for discrete distributions) of the distribution's kernel.
+#'
+#' @param x An object of class \code{"distrib"} specifying the distribution components
+#'   (type, kernel, normalization constant, and bounds).
+#' @param q A numeric vector of quantiles.
+#' @param theta A named list of parameters for the distribution.
+#'   The names must match the parameters defined in \code{x$params}.
+#' @param lower.tail Logical; if \code{TRUE} (default), probabilities are \eqn{P(X \leq x)},
+#'   otherwise, \eqn{P(X > x)}.
+#' @param log.p Logical; if \code{TRUE}, probabilities \code{p} are given as \code{log(p)}.
+#' @param ... Additional arguments passed to the underlying numerical integration function
+#'   (\code{\link[stats]{integrate}}) for continuous distributions and numerical
+#'   summation function (\code{\link[distrib]{series}}) for discrete distributions..
+#'
+#' @details
+#' The function computes the CDF based on the \code{type} of the distribution defined in \code{x}:
+#'
+#' \strong{Continuous Distributions:}
+#' The probability is calculated via numerical integration of the kernel function divided by the
+#' normalization constant:
+#' \deqn{F(q) = \dfrac{1}{C(\theta)} \int_{lower}^{q} k(t, \theta) \, dt}
+#'
+#' \strong{Discrete Distributions:}
+#' The probability is calculated via summation. The quantile \code{q} is first floored to the nearest integer
+#' (\code{floor(q)}). The function sums the kernel from the lower bound up to \code{q}:
+#' \deqn{F(q) = \dfrac{1}{C(\theta)} \sum_{x=lower}^{\lfloor q \rfloor} k(x, \theta)}
+#'
+#' \strong{Boundary Handling:}
+#' \itemize{
+#'   \item If \code{q} is smaller than the lower bound, the result is 0.
+#'   \item If \code{q} is larger than the upper bound, the result is 1.
+#' }
+#'
+#' \strong{Numerical Stability:}
+#' The resulting probabilities are clipped to the range \eqn{[0, 1]} to prevent floating-point
+#' errors from producing invalid probabilities (e.g., slightly greater than 1 or less than 0).
+#'
+#' @return A numeric vector of probabilities (or log-probabilities if \code{log.p = TRUE}).
+#'
+#' @seealso \code{\link{cdf}}, \code{\link[stats]{integrate}}
+#'
+#' @method cdf distrib
+#' @export
+cdf.distrib <- function(x, q, theta, lower.tail = TRUE, log.p = FALSE, ...) {
+  check_params_dim(theta)
+
+  params <- x$params
+  theta_mat <- do.call(cbind, theta)
+  theta_list <- split(theta_mat, row(theta_mat)) |>
+    lapply(function(th) {
+      th <- as.list(th)
+      names(th) <- params
+      th
+    })
+
+  type <- x$type
+  kernel <- x$kernel
+  normalization_constant <- x$normalization_constant
+  bounds <- x$bounds
+
+  if (type == "continuous") {
+    p <- mapply(
+      FUN = function(q, theta) {
+        if (q < bounds[1]) {
+          0
+        } else if (q > bounds[2]) {
+          1
+        } else {
+          stats::integrate(
+            f = \(t) kernel(t, theta, log = FALSE),
+            lower = bounds[1],
+            upper = q,
+            ...
+          )$value
+        }
+      },
+      q = q,
+      theta = theta_list
+    ) / normalization_constant(theta, log = FALSE)
+  } else if (type == "discrete") {
+    q <- floor(q)
+
+    p <- mapply(
+      FUN = function(q, theta) {
+        if (q < bounds[1]) {
+          0
+        } else if (q > bounds[2]) {
+          1
+        } else {
+          series(
+            f = \(t) kernel(t, theta, log = FALSE),
+            start = bounds[1],
+            end = q
+          )
+        }
+      },
+      q = q,
+      theta = theta_list
+    ) / normalization_constant(theta, log = FALSE)
+  }
+
+  p <- pmin(pmax(p, 0), 1)
+
+  if (!lower.tail) {
+    p <- 1 - p
+  }
+
+  if (log.p) {
+    p <- log(p)
+  }
+
+  p
+}

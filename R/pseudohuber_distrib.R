@@ -1,4 +1,3 @@
-#
 # pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link(), link_nu = log_link()) {
 #   o <- list()
 #   class(o) <- c("distrib")
@@ -52,31 +51,8 @@
 #     }
 #   }
 #
-#   o$cdf <- function(q, theta, lower.tail = FALSE, log.p = FALSE) {
-#     mu <- theta[["mu"]]
-#     sigma <- theta[["sigma"]]
-#     nu <- theta[["nu"]]
-#     p <- mapply(
-#       \(q, mu, sigma, nu) {
-#         integrate(\(t) o$kernel(t, list(mu = mu, sigma = sigma, nu = nu), log = FALSE), -Inf, q)$value
-#       },
-#       q = q,
-#       mu = mu,
-#       sigma = sigma,
-#       nu = nu
-#     )
-#     z <- o$normalization_constant(theta, log = FALSE)
-#     p <- p / z
-#
-#     if (lower.tail) {
-#       p <- 1 - p
-#     }
-#
-#     if (log.p) {
-#       log(p)
-#     } else {
-#       p
-#     }
+#   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
+#     cdf.distrib(o, q, theta, lower.tail, log.p)
 #   }
 #
 #   o$qf <- function(p, theta, lower.tail = FALSE, log.p = FALSE) {
@@ -115,4 +91,4 @@
 #
 #   o
 # }
-#
+# #
