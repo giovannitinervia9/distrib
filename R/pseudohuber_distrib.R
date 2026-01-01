@@ -69,7 +69,7 @@
 #     }
 #   }
 #
-#   o$mean <- function(theta) {
+#   o$mean <- o$median <- o$mode <- function(theta) {
 #     theta[["mu"]]
 #   }
 #

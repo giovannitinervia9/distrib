@@ -155,6 +155,14 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     o$size * theta[["mu"]]
   }
 
+  o$mode <- function(theta) {
+    floor((o$size + 1) * theta[["mu"]])
+  }
+
+  o$median <- function(theta) {
+    ceiling(o$size * theta[["mu"]])
+  }
+
   o$variance <- function(theta) {
     mu <- theta[["mu"]]
     o$size * mu * (1 - mu)

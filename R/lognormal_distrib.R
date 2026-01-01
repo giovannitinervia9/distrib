@@ -194,5 +194,9 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     exp(theta[["mu"]] - theta[["sigma2"]])
   }
 
+  o$median <- function(theta) {
+    exp(theta[["mu"]])
+  }
+
   o
 }

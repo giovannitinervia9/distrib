@@ -216,5 +216,9 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
     )
   }
 
+  o$median <- function(theta) {
+    o$qf(.5, theta)
+  }
+
   o
 }

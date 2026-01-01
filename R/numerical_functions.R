@@ -468,7 +468,6 @@ kurtosis.distrib <- function(x, theta, use_moment = FALSE, ...) {
 #'
 #' @seealso \code{\link{cdf}}, \code{\link[stats]{integrate}}
 #'
-#' @method cdf distrib
 #' @export
 cdf.distrib <- function(x, q, theta, lower.tail = TRUE, log.p = FALSE, ...) {
   check_params_dim(theta)

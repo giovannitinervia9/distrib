@@ -140,6 +140,18 @@ poisson_distrib <- function(link_mu = log_link()) {
     theta[["mu"]]
   }
 
+  o$mode <- function(theta) {
+    # Returns floor(mu).
+    # Note: If mu is integer, technically mu and mu-1 are modes.
+    # We return the largest to maintain scalar/vector consistency.
+    floor(theta[["mu"]])
+  }
+
+  o$median <- function(theta) {
+    mu <- theta[["mu"]]
+    floor(mu + 1 / 3 - 0.02 / mu)
+  }
+
   o$variance <- function(theta) {
     theta[["mu"]]
   }

@@ -143,5 +143,42 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
     6 / th + (th + mu)^2 / (mu * th * (th + mu))
   }
 
+  o$kernel <- function(y, theta, log = TRUE) {
+    mu <- theta[["mu"]]
+    th <- theta[["theta"]]
+    k <- lgamma(y + th) - lfactorial(y) + y * log(mu / (mu + th))
+    if (log) {
+      k
+    } else {
+      exp(k)
+    }
+  }
+
+  o$normalization_constant <- function(theta, log = TRUE) {
+    mu <- theta[["mu"]]
+    th <- theta[["theta"]]
+    z <- lgamma(th) + th * log((mu + th) / th)
+
+    if (log) {
+      z
+    } else {
+      exp(z)
+    }
+  }
+
+  o$median <- function(theta) {
+    stats::qnbinom(
+      p = 0.5,
+      mu = theta[["mu"]],
+      size = theta[["theta"]]
+    )
+  }
+
+  o$mode <- function(theta) {
+    mu <- theta[["mu"]]
+    th <- theta[["theta"]]
+    ifelse(th > 1, floor(mu * (th - 1) / th), 0)
+  }
+
   o
 }

@@ -224,8 +224,12 @@ student_t_distrib <- function(
     }
   }
 
-  o$mean <- o$median <- o$mode <- function(theta) {
+  o$mean <- function(theta) {
     ifelse(theta[["nu"]] > 1, theta[["mu"]], NA)
+  }
+
+  o$median <- o$mode <- function(theta) {
+    theta[["mu"]]
   }
 
   o$variance <- function(theta) {

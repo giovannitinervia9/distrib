@@ -210,6 +210,22 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
     theta[["mu"]]
   }
 
+  o$median <- function(theta) {
+    o$qf(.5, theta)
+  }
+
+  o$mode <- function(theta) {
+    mu <- theta[["mu"]]
+    phi <- theta[["phi"]]
+    alpha <- mu * phi
+    beta <- (1 - mu) * phi
+    ifelse(alpha > 1 & beta > 1, (alpha - 1) / (alpha + beta - 2),
+      ifelse(alpha <= 1 & beta > 1, 0,
+        ifelse(alpha > 1 & beta <= 1, 1, NA)
+      )
+    )
+  }
+
   o$variance <- function(theta) {
     mu <- theta[["mu"]]
     phi <- theta[["phi"]]

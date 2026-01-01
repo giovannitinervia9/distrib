@@ -207,5 +207,9 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
     mu * (sqrt(1 + k^2) - k)
   }
 
+  o$median <- function(theta) {
+    o$qf(.5, theta)
+  }
+
   o
 }

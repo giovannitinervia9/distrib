@@ -145,6 +145,10 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     theta[["mu"]]
   }
 
+  o$mode <- o$median <- function(theta) {
+    ifelse(theta[["mu"]] < .5, 0, 1)
+  }
+
   o$variance <- function(theta) {
     mu <- theta[["mu"]]
     mu * (1 - mu)
