@@ -65,7 +65,7 @@ poisson_distrib <- function(link_mu = log_link()) {
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dpois(
       x = y,
-      lambda = theta[["mu"]],
+      lambda = theta[[1]],
       log = log
     )
   }
@@ -73,7 +73,7 @@ poisson_distrib <- function(link_mu = log_link()) {
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::ppois(
       q = q,
-      lambda = theta[["mu"]],
+      lambda = theta[[1]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -82,7 +82,7 @@ poisson_distrib <- function(link_mu = log_link()) {
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qpois(
       p = p,
-      lambda = theta[["mu"]],
+      lambda = theta[[1]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -91,7 +91,7 @@ poisson_distrib <- function(link_mu = log_link()) {
   o$rng <- function(n, theta) {
     stats::rpois(
       n = n,
-      lambda = theta[["mu"]]
+      lambda = theta[[1]]
     )
   }
 
@@ -100,7 +100,7 @@ poisson_distrib <- function(link_mu = log_link()) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     list(
       mu = (y - mu) / mu
     )
@@ -109,17 +109,17 @@ poisson_distrib <- function(link_mu = log_link()) {
   o$hessian <- function(y, theta, expected = FALSE) {
     if (expected) {
       list(
-        mu_mu = -1 / theta[["mu"]]
+        mu_mu = -1 / theta[[1]]
       )
     } else {
       list(
-        mu_mu = -y / (theta[["mu"]]^2)
+        mu_mu = -y / (theta[[1]]^2)
       )
     }
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    k <- y * log(theta[["mu"]]) - lfactorial(y)
+    k <- y * log(theta[[1]]) - lfactorial(y)
     if (log) {
       k
     } else {
@@ -128,7 +128,7 @@ poisson_distrib <- function(link_mu = log_link()) {
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    z <- theta[["mu"]]
+    z <- theta[[1]]
     if (log) {
       z
     } else {
@@ -137,31 +137,31 @@ poisson_distrib <- function(link_mu = log_link()) {
   }
 
   o$mean <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$mode <- function(theta) {
     # Returns floor(mu).
     # Note: If mu is integer, technically mu and mu-1 are modes.
     # We return the largest to maintain scalar/vector consistency.
-    floor(theta[["mu"]])
+    floor(theta[[1]])
   }
 
   o$median <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     floor(mu + 1 / 3 - 0.02 / mu)
   }
 
   o$variance <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$skewness <- function(theta) {
-    1 / sqrt(theta[["mu"]])
+    1 / sqrt(theta[[1]])
   }
 
   o$kurtosis <- function(theta) {
-    1 / theta[["mu"]]
+    1 / theta[[1]]
   }
 
   o

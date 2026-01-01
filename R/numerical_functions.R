@@ -160,13 +160,8 @@ moment <- function(
     stop("Provided value of p has a dimension which does not match with theta")
   }
 
-  theta_mat <- do.call(cbind, theta)
-  theta_list <- split(theta_mat, row(theta_mat)) |>
-    lapply(function(th) {
-      th <- as.list(th)
-      names(th) <- params
-      th
-    })
+  theta <- expand_params(theta)
+  theta_list <- transpose_params(theta)
 
   if (central) {
     if (is.null(mu)) {
@@ -472,14 +467,9 @@ kurtosis.distrib <- function(x, theta, use_moment = FALSE, ...) {
 cdf.distrib <- function(x, q, theta, lower.tail = TRUE, log.p = FALSE, ...) {
   check_params_dim(theta)
 
-  params <- x$params
-  theta_mat <- do.call(cbind, theta)
-  theta_list <- split(theta_mat, row(theta_mat)) |>
-    lapply(function(th) {
-      th <- as.list(th)
-      names(th) <- params
-      th
-    })
+  check_params_dim(theta)
+  theta <- expand_params(theta)
+  theta_list <- transpose_params(theta)
 
   type <- x$type
   kernel <- x$kernel

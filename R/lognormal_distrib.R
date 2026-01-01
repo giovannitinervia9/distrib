@@ -79,8 +79,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dlnorm(
       x = y,
-      meanlog = theta[["mu"]],
-      sdlog = sqrt(theta[["sigma2"]]),
+      meanlog = theta[[1]],
+      sdlog = sqrt(theta[[2]]),
       log = log
     )
   }
@@ -88,8 +88,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::plnorm(
       q = q,
-      meanlog = theta[["mu"]],
-      sdlog = sqrt(theta[["sigma2"]]),
+      meanlog = theta[[1]],
+      sdlog = sqrt(theta[[2]]),
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -98,8 +98,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qlnorm(
       p = p,
-      meanlog = theta[["mu"]],
-      sdlog = sqrt(theta[["sigma2"]]),
+      meanlog = theta[[1]],
+      sdlog = sqrt(theta[[2]]),
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -108,8 +108,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$rng <- function(n, theta) {
     stats::rlnorm(
       n = n,
-      meanlog = theta[["mu"]],
-      sdlog = sqrt(theta[["sigma2"]])
+      meanlog = theta[[1]],
+      sdlog = sqrt(theta[[2]])
     )
   }
 
@@ -118,8 +118,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     log_y <- log(y)
     list(
       mu = (log_y - mu) / sigma2,
@@ -128,8 +128,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     sigma22 <- sigma2 * sigma2
 
     if (expected) {
@@ -150,8 +150,8 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
 
     k <- -.5 * (log(y) - mu)^2 / sigma2 - log(y)
 
@@ -163,7 +163,7 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    z <- sqrt(2 * pi * theta[["sigma2"]])
+    z <- sqrt(2 * pi * theta[[2]])
 
     if (log) {
       log(z)
@@ -173,29 +173,29 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$mean <- function(theta) {
-    exp(theta[["mu"]] + theta[["sigma2"]] / 2)
+    exp(theta[[1]] + theta[[2]] / 2)
   }
 
   o$variance <- function(theta) {
-    (exp(theta[["sigma2"]]) - 1) * exp(2 * theta[["mu"]] + theta[["sigma2"]])
+    (exp(theta[[2]]) - 1) * exp(2 * theta[[1]] + theta[[2]])
   }
 
   o$skewness <- function(theta) {
-    sigma2 <- theta[["sigma2"]]
+    sigma2 <- theta[[2]]
     (exp(sigma2) + 2) * sqrt(exp(sigma2) - 1)
   }
 
   o$kurtosis <- function(theta) {
-    sigma2 <- theta[["sigma2"]]
+    sigma2 <- theta[[2]]
     exp(4 * sigma2) + 2 * exp(3 * sigma2) + 3 * exp(2 * sigma2) - 6
   }
 
   o$mode <- function(theta) {
-    exp(theta[["mu"]] - theta[["sigma2"]])
+    exp(theta[[1]] - theta[[2]])
   }
 
   o$median <- function(theta) {
-    exp(theta[["mu"]])
+    exp(theta[[1]])
   }
 
   o

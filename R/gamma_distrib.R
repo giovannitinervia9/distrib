@@ -79,8 +79,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   )
 
   o$pdf <- function(y, theta, log = FALSE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     stats::dgamma(
       x = y,
       shape = mu^2 / sigma2,
@@ -90,8 +90,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     stats::pgamma(
       q = q,
       shape = mu^2 / sigma2,
@@ -102,8 +102,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     stats::qgamma(
       p = p,
       shape = mu^2 / sigma2,
@@ -114,8 +114,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$rng <- function(n, theta) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     stats::rgamma(
       n = n,
       shape = mu^2 / sigma2,
@@ -128,8 +128,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
     digamma_mu2_sigma2 <- digamma(mu2_sigma2)
@@ -141,8 +141,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
     digamma_mu2_sigma2 <- digamma(mu2_sigma2)
@@ -165,8 +165,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
     k <- (mu2_sigma2 - 1) * log(y) - y * mu_sigma2
@@ -178,8 +178,8 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
     k <- lgamma(mu2_sigma2) - mu2_sigma2 * log(mu_sigma2)
@@ -192,24 +192,24 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$mean <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    theta[["sigma2"]]
+    theta[[2]]
   }
 
   o$skewness <- function(theta) {
-    2 * sqrt(theta[["sigma2"]]) / theta[["mu"]]
+    2 * sqrt(theta[[2]]) / theta[[1]]
   }
 
   o$kurtosis <- function(theta) {
-    6 * theta[["sigma2"]] / theta[["mu"]]^2
+    6 * theta[[2]] / theta[[1]]^2
   }
 
   o$mode <- function(theta) {
-    mu <- theta[["mu"]]
-    sigma2 <- theta[["sigma2"]]
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
     alpha <- mu^2 / sigma2
     ifelse(
       alpha >= 1, (alpha - 1) / (mu / sigma2), 0

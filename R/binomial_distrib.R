@@ -72,7 +72,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     stats::dbinom(
       x = y,
       size = o$size,
-      prob = theta[["mu"]],
+      prob = theta[[1]],
       log = log
     )
   }
@@ -81,7 +81,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     stats::pbinom(
       q = q,
       size = o$size,
-      prob = theta[["mu"]],
+      prob = theta[[1]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -91,7 +91,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     stats::qbinom(
       p = p,
       size = o$size,
-      prob = theta[["mu"]],
+      prob = theta[[1]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -101,7 +101,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     stats::rbinom(
       n = n,
       size = o$size,
-      prob = theta[["mu"]]
+      prob = theta[[1]]
     )
   }
 
@@ -110,7 +110,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     n_trials <- o$size
     list(
       mu = (y - n_trials * mu) / (mu * (1 - mu))
@@ -118,7 +118,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     n_trials <- o$size
     if (expected) {
       list(
@@ -132,7 +132,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     n_trials <- o$size
     k <- lchoose(n_trials, y) + y * log(mu / (1 - mu)) + n_trials * log(1 - mu)
 
@@ -152,29 +152,29 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
   }
 
   o$mean <- function(theta) {
-    o$size * theta[["mu"]]
+    o$size * theta[[1]]
   }
 
   o$mode <- function(theta) {
-    floor((o$size + 1) * theta[["mu"]])
+    floor((o$size + 1) * theta[[1]])
   }
 
   o$median <- function(theta) {
-    ceiling(o$size * theta[["mu"]])
+    ceiling(o$size * theta[[1]])
   }
 
   o$variance <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     o$size * mu * (1 - mu)
   }
 
   o$skewness <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     (1 - 2 * mu) / sqrt(o$size * mu * (1 - mu))
   }
 
   o$kurtosis <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     (1 - 6 * mu * (1 - mu)) / (o$size * mu * (1 - mu))
   }
 

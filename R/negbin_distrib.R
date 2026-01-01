@@ -41,8 +41,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dnbinom(
       x = y,
-      mu = theta[["mu"]],
-      size = theta[["theta"]],
+      mu = theta[[1]],
+      size = theta[[2]],
       log = log
     )
   }
@@ -50,8 +50,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::pnbinom(
       q = q,
-      mu = theta[["mu"]],
-      size = theta[["theta"]],
+      mu = theta[[1]],
+      size = theta[[2]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -60,8 +60,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnbinom(
       p = p,
-      mu = theta[["mu"]],
-      size = theta[["theta"]],
+      mu = theta[[1]],
+      size = theta[[2]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -70,8 +70,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o$rng <- function(n, theta) {
     stats::rnbinom(
       n = n,
-      mu = theta[["mu"]],
-      size = theta[["theta"]]
+      mu = theta[[1]],
+      size = theta[[2]]
     )
   }
 
@@ -80,8 +80,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
-    theta <- theta[["theta"]]
+    mu <- theta[[1]]
+    theta <- theta[[2]]
     y_plus_theta <- y + theta
     th_plus_mu <- theta + mu
     th_frac_th_plus_mu <- theta / th_plus_mu
@@ -100,8 +100,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
-    theta <- theta[["theta"]]
+    mu <- theta[[1]]
+    theta <- theta[[2]]
     y_plus_theta <- y + theta
     th_plus_mu <- theta + mu
     th_frac_th_plus_mu <- theta / th_plus_mu
@@ -122,30 +122,30 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   }
 
   o$mean <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    mu <- theta[[1]]
+    th <- theta[[2]]
     mu + (mu^2 / th)
   }
 
   o$skewness <- function(theta) {
-    mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    mu <- theta[[1]]
+    th <- theta[[2]]
     (th + 2 * mu) / sqrt(mu * th * (th + mu))
   }
 
   o$kurtosis <- function(theta) {
-    mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    mu <- theta[[1]]
+    th <- theta[[2]]
     6 / th + (th + mu)^2 / (mu * th * (th + mu))
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    mu <- theta[[1]]
+    th <- theta[[2]]
     k <- lgamma(y + th) - lfactorial(y) + y * log(mu / (mu + th))
     if (log) {
       k
@@ -155,8 +155,8 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    mu <- theta[[1]]
+    th <- theta[[2]]
     z <- lgamma(th) + th * log((mu + th) / th)
 
     if (log) {
@@ -169,14 +169,14 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
   o$median <- function(theta) {
     stats::qnbinom(
       p = 0.5,
-      mu = theta[["mu"]],
-      size = theta[["theta"]]
+      mu = theta[[1]],
+      size = theta[[2]]
     )
   }
 
   o$mode <- function(theta) {
-    mu <- theta[["mu"]]
-    th <- theta[["theta"]]
+    mu <- theta[[1]]
+    th <- theta[[2]]
     ifelse(th > 1, floor(mu * (th - 1) / th), 0)
   }
 

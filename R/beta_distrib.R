@@ -77,8 +77,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   )
 
   o$pdf <- function(y, theta, log = FALSE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     stats::dbeta(
       x = y,
       shape1 = mu * phi,
@@ -88,8 +88,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     stats::pbeta(
       q = q,
       shape1 = mu * phi,
@@ -100,8 +100,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     stats::qbeta(
       p = p,
       shape1 = mu * phi,
@@ -112,8 +112,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$rng <- function(n, theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     stats::rbeta(
       n = n,
       shape1 = mu * phi,
@@ -126,8 +126,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
 
     alpha <- mu * phi
     beta <- (1 - mu) * phi
@@ -146,8 +146,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
 
     alpha <- mu * phi
     beta <- (1 - mu) * phi
@@ -181,8 +181,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     alpha <- mu * phi
     beta <- (1 - mu) * phi
 
@@ -196,8 +196,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     z <- lbeta(mu * phi, (1 - mu) * phi)
     if (log) {
       z
@@ -207,7 +207,7 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$mean <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$median <- function(theta) {
@@ -215,8 +215,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$mode <- function(theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     alpha <- mu * phi
     beta <- (1 - mu) * phi
     ifelse(alpha > 1 & beta > 1, (alpha - 1) / (alpha + beta - 2),
@@ -227,14 +227,14 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$variance <- function(theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     (mu * (1 - mu)) / (1 + phi)
   }
 
   o$skewness <- function(theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     num <- 2 * (1 - 2 * mu) * sqrt(1 + phi)
     den <- (2 + phi) * sqrt(mu * (1 - mu))
     num / den
@@ -242,8 +242,8 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
 
   o$kurtosis <- function(theta) {
     # Excess kurtosis
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     term1 <- mu * (1 - mu) * (1 + phi)
     term2 <- phi * (1 + phi) * (1 - 2 * mu)^2
     denom <- mu * (1 - mu) * (2 + phi) * (3 + phi)

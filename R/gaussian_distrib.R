@@ -88,8 +88,8 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dnorm(
       x = y,
-      mean = theta[["mu"]],
-      sd = theta[["sigma"]],
+      mean = theta[[1]],
+      sd = theta[[2]],
       log = log
     )
   }
@@ -97,8 +97,8 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::pnorm(
       q = q,
-      mean = theta[["mu"]],
-      sd = theta[["sigma"]],
+      mean = theta[[1]],
+      sd = theta[[2]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -107,8 +107,8 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
-      mean = theta[["mu"]],
-      sd = theta[["sigma"]],
+      mean = theta[[1]],
+      sd = theta[[2]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -117,8 +117,8 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   o$rng <- function(n, theta) {
     stats::rnorm(
       n = n,
-      mean = theta[["mu"]],
-      sd = theta[["sigma"]]
+      mean = theta[[1]],
+      sd = theta[[2]]
     )
   }
 
@@ -127,9 +127,9 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   }
 
   o$gradient <- function(y, theta) {
-    sigma <- theta[["sigma"]]
+    sigma <- theta[[2]]
     sigma2 <- sigma^2
-    residuals <- y - theta[["mu"]]
+    residuals <- y - theta[[1]]
     list(
       mu = residuals / sigma2,
       sigma = (residuals^2 - sigma2) / sigma^3
@@ -137,7 +137,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    sigma <- theta[["sigma"]]
+    sigma <- theta[[2]]
     sigma2 <- sigma^2
     if (expected) {
       list(
@@ -146,7 +146,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
         mu_sigma = 0
       )
     } else {
-      residuals <- y - theta[["mu"]]
+      residuals <- y - theta[[1]]
       list(
         mu_mu = -1 / sigma2,
         sigma_sigma = (sigma2 - 3 * residuals^2) / (sigma2 * sigma2),
@@ -156,7 +156,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    k <- -.5 * ((y - theta[["mu"]]) / theta[["sigma"]])^2
+    k <- -.5 * ((y - theta[[1]]) / theta[[2]])^2
     if (log) {
       k
     } else {
@@ -165,7 +165,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    z <- sqrt(2 * pi) * theta[["sigma"]]
+    z <- sqrt(2 * pi) * theta[[2]]
 
     if (log) {
       log(z)
@@ -175,11 +175,11 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    theta[["sigma"]]^2
+    theta[[2]]^2
   }
 
   o$skewness <- function(theta) {
@@ -271,8 +271,8 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dnorm(
       x = y,
-      mean = theta[["mu"]],
-      sd = sqrt(theta[["sigma2"]]),
+      mean = theta[[1]],
+      sd = sqrt(theta[[2]]),
       log = log
     )
   }
@@ -280,8 +280,8 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::pnorm(
       q = q,
-      mean = theta[["mu"]],
-      sd = sqrt(theta[["sigma2"]]),
+      mean = theta[[1]],
+      sd = sqrt(theta[[2]]),
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -290,8 +290,8 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
-      mean = theta[["mu"]],
-      sd = sqrt(theta[["sigma2"]]),
+      mean = theta[[1]],
+      sd = sqrt(theta[[2]]),
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -300,8 +300,8 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$rng <- function(n, theta) {
     stats::rnorm(
       n = n,
-      mean = theta[["mu"]],
-      sd = sqrt(theta[["sigma2"]])
+      mean = theta[[1]],
+      sd = sqrt(theta[[2]])
     )
   }
 
@@ -310,8 +310,8 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$gradient <- function(y, theta) {
-    sigma2 <- theta[["sigma2"]]
-    residuals <- y - theta[["mu"]]
+    sigma2 <- theta[[2]]
+    residuals <- y - theta[[1]]
     list(
       mu = residuals / sigma2,
       sigma2 = (residuals^2 - sigma2) / (2 * sigma2 * sigma2)
@@ -319,7 +319,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    sigma2 <- theta[["sigma2"]]
+    sigma2 <- theta[[2]]
     sigma4 <- sigma2 * sigma2
     if (expected) {
       list(
@@ -328,7 +328,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
         mu_sigma2 = 0
       )
     } else {
-      residuals <- y - theta[["mu"]]
+      residuals <- y - theta[[1]]
       list(
         mu_mu = -1 / sigma2,
         sigma2_sigma2 = (sigma2 - 2 * residuals^2) / (2 * sigma4 * sigma2),
@@ -338,7 +338,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    k <- -.5 * (y - theta[["mu"]])^2 / theta[["sigma2"]]
+    k <- -.5 * (y - theta[[1]])^2 / theta[[2]]
     if (log) {
       k
     } else {
@@ -347,7 +347,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    z <- sqrt(2 * pi * theta[["sigma2"]])
+    z <- sqrt(2 * pi * theta[[2]])
     if (log) {
       log(z)
     } else {
@@ -356,11 +356,11 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    theta[["sigma2"]]
+    theta[[2]]
   }
 
   o$skewness <- function(theta) {
@@ -452,8 +452,8 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   o$pdf <- function(y, theta, log = FALSE) {
     stats::dnorm(
       x = y,
-      mean = theta[["mu"]],
-      sd = 1 / sqrt(theta[["tau"]]),
+      mean = theta[[1]],
+      sd = 1 / sqrt(theta[[2]]),
       log = log
     )
   }
@@ -461,8 +461,8 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::pnorm(
       q = q,
-      mean = theta[["mu"]],
-      sd = 1 / sqrt(theta[["tau"]]),
+      mean = theta[[1]],
+      sd = 1 / sqrt(theta[[2]]),
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -471,8 +471,8 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
-      mean = theta[["mu"]],
-      sd = 1 / sqrt(theta[["tau"]]),
+      mean = theta[[1]],
+      sd = 1 / sqrt(theta[[2]]),
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -481,8 +481,8 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   o$rng <- function(n, theta) {
     stats::rnorm(
       n = n,
-      mean = theta[["mu"]],
-      sd = 1 / sqrt(theta[["tau"]])
+      mean = theta[[1]],
+      sd = 1 / sqrt(theta[[2]])
     )
   }
 
@@ -491,8 +491,8 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   }
 
   o$gradient <- function(y, theta) {
-    tau <- theta[["tau"]]
-    residuals <- y - theta[["mu"]]
+    tau <- theta[[2]]
+    residuals <- y - theta[[1]]
     list(
       mu = tau * residuals,
       tau = (1 / (2 * tau)) - (residuals^2 / 2)
@@ -500,7 +500,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    tau <- theta[["tau"]]
+    tau <- theta[[2]]
     if (expected) {
       list(
         mu_mu = -tau,
@@ -508,7 +508,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
         mu_tau = 0
       )
     } else {
-      residuals <- y - theta[["mu"]]
+      residuals <- y - theta[[1]]
       list(
         mu_mu = -tau,
         tau_tau = -1 / (2 * tau^2),
@@ -518,7 +518,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    k <- -.5 * (y - theta[["mu"]])^2 * theta[["tau"]]
+    k <- -.5 * (y - theta[[1]])^2 * theta[[2]]
     if (log) {
       k
     } else {
@@ -527,7 +527,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    z <- sqrt(2 * pi / theta[["tau"]])
+    z <- sqrt(2 * pi / theta[[2]])
     if (log) {
       log(z)
     } else {
@@ -536,11 +536,11 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   }
 
   o$mean <- o$median <- o$mode <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    1 / theta[["tau"]]
+    1 / theta[[2]]
   }
 
   o$skewness <- function(theta) {

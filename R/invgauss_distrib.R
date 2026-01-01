@@ -91,8 +91,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   o$pdf <- function(y, theta, log = FALSE) {
     statmod::dinvgauss(
       x = y,
-      mean = theta[["mu"]],
-      dispersion = theta[["phi"]],
+      mean = theta[[1]],
+      dispersion = theta[[2]],
       log = log
     )
   }
@@ -100,8 +100,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
     statmod::pinvgauss(
       q = q,
-      mean = theta[["mu"]],
-      dispersion = theta[["phi"]],
+      mean = theta[[1]],
+      dispersion = theta[[2]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -110,8 +110,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     statmod::qinvgauss(
       p = p,
-      mean = theta[["mu"]],
-      dispersion = theta[["phi"]],
+      mean = theta[[1]],
+      dispersion = theta[[2]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -120,8 +120,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   o$rng <- function(n, theta) {
     statmod::rinvgauss(
       n = n,
-      mean = theta[["mu"]],
-      dispersion = theta[["phi"]]
+      mean = theta[[1]],
+      dispersion = theta[[2]]
     )
   }
 
@@ -130,8 +130,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     res <- y - mu
     mu2 <- mu * mu
     list(
@@ -141,8 +141,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     mu2 <- mu * mu
     phi2 <- phi * phi
 
@@ -163,8 +163,8 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     k <- -.5 * (y - mu)^2 / (phi * mu^2 * y) - 1.5 * log(y)
 
     if (log) {
@@ -175,7 +175,7 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    z <- sqrt(2 * pi * theta[["phi"]])
+    z <- sqrt(2 * pi * theta[[2]])
 
     if (log) {
       log(z)
@@ -185,24 +185,24 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   }
 
   o$mean <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    theta[["mu"]]^3 * theta[["phi"]]
+    theta[[1]]^3 * theta[[2]]
   }
 
   o$skewness <- function(theta) {
-    3 * sqrt(theta[["mu"]] * theta[["phi"]])
+    3 * sqrt(theta[[1]] * theta[[2]])
   }
 
   o$kurtosis <- function(theta) {
-    15 * theta[["mu"]] * theta[["phi"]]
+    15 * theta[[1]] * theta[[2]]
   }
 
   o$mode <- function(theta) {
-    mu <- theta[["mu"]]
-    phi <- theta[["phi"]]
+    mu <- theta[[1]]
+    phi <- theta[[2]]
     k <- 1.5 * mu * phi
     mu * (sqrt(1 + k^2) - k)
   }

@@ -66,7 +66,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     stats::dbinom(
       x = y,
       size = 1,
-      prob = theta[["mu"]],
+      prob = theta[[1]],
       log = log
     )
   }
@@ -75,7 +75,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     stats::pbinom(
       q = q,
       size = 1,
-      prob = theta[["mu"]],
+      prob = theta[[1]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -85,7 +85,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     stats::qbinom(
       p = p,
       size = 1,
-      prob = theta[["mu"]],
+      prob = theta[[1]],
       lower.tail = lower.tail,
       log.p = log.p
     )
@@ -95,7 +95,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     stats::rbinom(
       n = n,
       size = 1,
-      prob = theta[["mu"]]
+      prob = theta[[1]]
     )
   }
 
@@ -104,14 +104,14 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     list(
       mu = (y - mu) / (mu * (1 - mu))
     )
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     if (expected) {
       list(
         mu_mu = -1 / (mu * (1 - mu))
@@ -124,7 +124,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     k <- y * log(mu / (1 - mu)) + log(1 - mu)
     if (log) {
       k
@@ -142,25 +142,25 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
   }
 
   o$mean <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$mode <- o$median <- function(theta) {
-    ifelse(theta[["mu"]] < .5, 0, 1)
+    ifelse(theta[[1]] < .5, 0, 1)
   }
 
   o$variance <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     mu * (1 - mu)
   }
 
   o$skewness <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     (1 - 2 * mu) / sqrt(mu * (1 - mu))
   }
 
   o$kurtosis <- function(theta) {
-    mu <- theta[["mu"]]
+    mu <- theta[[1]]
     (1 - 6 * mu * (1 - mu)) / (mu * (1 - mu))
   }
 

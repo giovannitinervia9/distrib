@@ -23,7 +23,7 @@
 #
 #
 #   o$kernel <- function(y, theta, log = TRUE) {
-#     k <- -sqrt(theta[["nu"]] + ((y - theta[["mu"]]) / theta[["sigma"]])^2)
+#     k <- -sqrt(theta[[3]] + ((y - theta[[1]]) / theta[[2]])^2)
 #     if (log) {
 #       k
 #     } else {
@@ -32,8 +32,8 @@
 #   }
 #
 #   o$normalization_constant <- function(theta, log = TRUE) {
-#     nu <- theta[["nu"]]
-#     z <- log(2) + log(theta[["sigma"]]) + .5 * log(nu) + log(besselK(sqrt(nu), 1))
+#     nu <- theta[[3]]
+#     z <- log(2) + log(theta[[2]]) + .5 * log(nu) + log(besselK(sqrt(nu), 1))
 #     if (log) {
 #       z
 #     } else {
@@ -70,12 +70,12 @@
 #   }
 #
 #   o$mean <- o$median <- o$mode <- function(theta) {
-#     theta[["mu"]]
+#     theta[[1]]
 #   }
 #
 #   o$variance <- function(theta) {
-#     sigma <- theta[["sigma"]]
-#     sqrt_nu <- sqrt(theta[["nu"]])
+#     sigma <- theta[[2]]
+#     sqrt_nu <- sqrt(theta[[3]])
 #     ratio_bessel <- besselK(sqrt_nu, 2) / besselK(sqrt_nu, 1)
 #     sigma^2 * sqrt_nu * ratio_bessel
 #   }
@@ -85,7 +85,7 @@
 #   }
 #
 #   o$kurtosis <- function(theta) {
-#     sqrt_nu <- sqrt(theta[["nu"]])
+#     sqrt_nu <- sqrt(theta[[3]])
 #     3 * (besselK(sqrt_nu, 3) * besselK(sqrt_nu, 1)) / (besselK(sqrt_nu, 2)^2)
 #   }
 #

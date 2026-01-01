@@ -100,9 +100,9 @@ student_t_distrib <- function(
   )
 
   o$pdf <- function(y, theta, log = FALSE) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     val <- stats::dt(
       x = (y - mu) / sigma,
       df = nu,
@@ -117,9 +117,9 @@ student_t_distrib <- function(
   }
 
   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     stats::pt(
       q = (q - mu) / sigma,
       df = nu,
@@ -129,9 +129,9 @@ student_t_distrib <- function(
   }
 
   o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     mu + sigma * stats::qt(
       p = p,
       df = nu,
@@ -141,9 +141,9 @@ student_t_distrib <- function(
   }
 
   o$rng <- function(n, theta) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     mu + sigma * stats::rt(
       n = n,
       df = nu
@@ -155,9 +155,9 @@ student_t_distrib <- function(
   }
 
   o$gradient <- function(y, theta) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     res <- y - mu
     res2 <- res * res
     sigma2 <- sigma * sigma
@@ -169,9 +169,9 @@ student_t_distrib <- function(
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     sigma2 <- sigma * sigma
 
     if (expected) {
@@ -200,9 +200,9 @@ student_t_distrib <- function(
   }
 
   o$kernel <- function(y, theta, log = TRUE) {
-    mu <- theta[["mu"]]
-    sigma <- theta[["sigma"]]
-    nu <- theta[["nu"]]
+    mu <- theta[[1]]
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
     z <- (y - mu) / sigma
     k <- -.5 * (nu + 1) * log(1 + z^2 / nu)
 
@@ -214,8 +214,8 @@ student_t_distrib <- function(
   }
 
   o$normalization_constant <- function(theta, log = TRUE) {
-    nu <- theta[["nu"]]
-    z <- lgamma(.5 * nu) + .5 * log(nu * pi) - lgamma(.5 * (nu + 1)) + log(theta[["sigma"]])
+    nu <- theta[[3]]
+    z <- lgamma(.5 * nu) + .5 * log(nu * pi) - lgamma(.5 * (nu + 1)) + log(theta[[2]])
 
     if (log) {
       z
@@ -225,27 +225,27 @@ student_t_distrib <- function(
   }
 
   o$mean <- function(theta) {
-    ifelse(theta[["nu"]] > 1, theta[["mu"]], NA)
+    ifelse(theta[[3]] > 1, theta[[1]], NA)
   }
 
   o$median <- o$mode <- function(theta) {
-    theta[["mu"]]
+    theta[[1]]
   }
 
   o$variance <- function(theta) {
-    nu <- theta[["nu"]]
+    nu <- theta[[3]]
     ifelse(nu > 2,
-      (theta[["sigma"]]^2) * nu / (nu - 2),
+      (theta[[2]]^2) * nu / (nu - 2),
       ifelse(nu > 1 & nu <= 2, Inf, NA)
     )
   }
 
   o$skewness <- function(theta) {
-    ifelse(theta[["nu"]] > 3, 0, NA)
+    ifelse(theta[[3]] > 3, 0, NA)
   }
 
   o$kurtosis <- function(theta) {
-    nu <- theta[["nu"]]
+    nu <- theta[[3]]
     ifelse(nu > 4,
       6 / (nu - 4),
       ifelse(nu > 2 & nu <= 4, Inf, NA)

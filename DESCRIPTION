@@ -16,4 +16,5 @@ Remotes:
     giovannitinervia9/linkfunctions
 Imports: 
     numDeriv,
+    purrr,
     statmod
