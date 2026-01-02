@@ -156,8 +156,8 @@ moment <- function(
   check_params_dim(theta)
 
   dim_p <- length(p)
-  if (dim_p != 1 && dim_p != max_dim_theta) {
-    stop("Provided value of p has a dimension which does not match with theta")
+  if (dim_p != 1 && max_dim_theta != 1 && dim_p != max_dim_theta) {
+    stop("Dimension of 'p' does not match dimension of 'theta'.")
   }
 
   theta <- expand_params(theta)
@@ -528,4 +528,221 @@ cdf.distrib <- function(x, q, theta, lower.tail = TRUE, log.p = FALSE, ...) {
   }
 
   p
+}
+
+
+
+
+#' Quantile Function for 'distrib' Objects
+#'
+#' @description
+#' Computes the Quantile Function (Inverse CDF) for a custom distribution object.
+#' Since most custom distributions do not have an analytical quantile function,
+#' this function employs numerical methods to invert the Cumulative Distribution Function (CDF).
+#'
+#' @param x An object of class \code{"distrib"}.
+#' @param p A vector of probabilities.
+#' @param theta A named list of parameters. Vectors are supported (batch calculation).
+#' @param lower.tail Logical; if \code{TRUE} (default), probabilities are \eqn{P(X \le x)}, otherwise \eqn{P(X > x)}.
+#' @param log.p Logical; if \code{TRUE}, probabilities \code{p} are given as \code{log(p)}.
+#' @param ... Additional arguments passed to the internal CDF numerical engines.
+#'
+#' @details
+#' **Numerical Strategy:**
+#' * **Continuous Distributions:** Uses \code{\link[stats]{uniroot}} to find the root of \eqn{CDF(q) - p = 0}.
+#'   It automatically expands the search interval if the root is not bracketed by the initial guess.
+#' * **Discrete Distributions:**
+#'   1. **Geometric Expansion:** Finds an interval \eqn{[low, high]} containing the quantile by exponentially
+#'      expanding a search window around a starting guess (Mean or Mode).
+#'   2. **Bisection:** Performs a binary search within that interval to find the smallest integer \eqn{k}
+#'      such that \eqn{CDF(k) \ge p}.
+#'
+#' @return A numeric vector of quantiles.
+#' @importFrom stats quantile
+#' @export
+quantile.distrib <- function(x, p, theta, lower.tail = TRUE, log.p = FALSE, ...) {
+  get_start_value <- function(x, theta) {
+    # Helper to check if a value is valid (not null, NA, or empty)
+    is_valid <- function(val) {
+      !is.null(val) && length(val) > 0 && !is.na(val)
+    }
+
+    # Priority 1: Analytical Mean
+    start <- tryCatch(x$mean(theta), error = function(e) NULL)
+    if (is_valid(start)) {
+      return(start)
+    }
+
+    # Priority 2: Analytical Mode
+    start <- tryCatch(x$mode(theta), error = function(e) NULL)
+    if (is_valid(start)) {
+      return(start)
+    }
+
+    # Priority 3: Analytical Median
+    start <- tryCatch(x$median(theta), error = function(e) NULL)
+    if (is_valid(start)) {
+      return(start)
+    }
+
+    # Priority 4: Domain Center (Fallback)
+    lb <- x$bounds[1]
+    ub <- x$bounds[2]
+
+    if (is.finite(lb) && is.finite(ub)) {
+      return((lb + ub) / 2)
+    } else if (is.finite(lb)) {
+      return(lb + 1)
+    } else if (is.finite(ub)) {
+      return(ub - 1)
+    }
+    return(0) # Default for (-Inf, Inf)
+  }
+
+  quantile_discrete <- function(x, target_p, theta) {
+    current <- round(get_start_value(x, theta))
+    lb_global <- x$bounds[1]
+    ub_global <- x$bounds[2]
+
+    # Calculate CDF at initial guess
+    F_curr <- x$cdf(current, theta)
+
+    # Phase A: Bracketing (Geometric Expansion)
+    # Find [low, high] such that CDF(low) < p <= CDF(high)
+    step <- 1
+
+    if (F_curr < target_p) {
+      # Target is to the right
+      low <- current
+      high <- current + step
+
+      while (x$cdf(high, theta) < target_p) {
+        low <- high
+        step <- step * 2 # Geometric expansion for speed
+        high <- high + step
+        if (high >= ub_global) {
+          high <- ub_global
+          break
+        }
+      }
+    } else {
+      # Target is to the left (or exactly here)
+      high <- current
+      low <- current - step
+
+      while (x$cdf(low, theta) >= target_p) {
+        high <- low
+        step <- step * 2
+        low <- low - step
+        if (low <= lb_global) {
+          low <- lb_global
+          break
+        }
+      }
+    }
+
+    # Phase B: Bisection (Binary Search)
+    # Find smallest integer k such that CDF(k) >= target_p
+    ans <- high
+    while (low <= high) {
+      mid <- floor((low + high) / 2)
+
+      # Boundary check safety
+      if (mid < lb_global) mid <- lb_global
+      if (mid > ub_global) mid <- ub_global
+
+      val <- x$cdf(mid, theta)
+
+      if (val >= target_p) {
+        ans <- mid
+        high <- mid - 1
+      } else {
+        low <- mid + 1
+      }
+    }
+    ans
+  }
+
+  quantile_continuous <- function(x, target_p, theta) {
+    # Objective function: CDF(q) - p = 0
+    obj <- function(q) {
+      x$cdf(q, theta) - target_p
+    }
+
+    start <- get_start_value(x, theta)
+    lb <- max(start - 1, x$bounds[1])
+    hb <- min(start + 1, x$bounds[2])
+
+    # Expand bracket until signs differ (Root finding prerequisite)
+    iter <- 0
+    max_iter <- 50
+
+    f_lb <- obj(lb)
+    f_hb <- obj(hb)
+
+    while (f_lb * f_hb > 0 && iter < max_iter) {
+      step <- 2^iter
+
+      # Expand lower bound
+      if (x$bounds[1] == -Inf) {
+        lb <- lb - step
+      } else {
+        lb <- max(lb - step, x$bounds[1])
+      }
+      # Expand upper bound
+      if (x$bounds[2] == Inf) {
+        hb <- hb + step
+      } else {
+        hb <- min(hb + step, x$bounds[2])
+      }
+
+      f_lb <- obj(lb)
+      f_hb <- obj(hb)
+      iter <- iter + 1
+    }
+
+
+    stats::uniroot(obj, interval = c(lb, hb), extendInt = "yes")$root
+  }
+
+
+  # Handle log probabilities and tail
+  if (log.p) {
+    p <- exp(p)
+  }
+  if (!lower.tail) {
+    p <- 1 - p
+  }
+
+  # Validate bounds (0 to 1)
+  if (any(p < 0 | p > 1)) {
+    stop("Probabilities must be between 0 and 1.")
+  }
+
+  # Parameter validation and expansion
+  check_params_dim(theta)
+
+  dim_p <- length(p)
+  max_dim_theta <- max(lengths(theta))
+
+  if (dim_p != 1 && max_dim_theta != 1 && dim_p != max_dim_theta) {
+    stop("Dimension of 'p' does not match dimension of 'theta'.")
+  }
+
+  theta <- expand_params(theta)
+  theta_list <- transpose_params(theta)
+
+  # Select solver based on distribution type
+  solver <- if (x$type == "continuous") {
+    quantile_continuous
+  } else {
+    quantile_discrete
+  }
+
+  # Execute vectorized calculation
+  mapply(
+    FUN = function(p_val, theta_val) solver(x, p_val, theta_val),
+    p_val = p,
+    theta_val = theta_list
+  )
 }

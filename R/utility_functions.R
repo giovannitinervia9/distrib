@@ -319,9 +319,7 @@ check_params_dim <- function(theta, n) {
     bad_lens <- len_theta[mismatch_idx]
 
     error_msg <- paste0(
-      "Parameter dimension mismatch. All parameters should have length 1 or ", n, ".\n",
-      "Found mismatches in:\n",
-      paste(paste0("  - ", bad_params, ": length ", bad_lens), collapse = "\n")
+      "Parameter dimension mismatch. All parameters should have length 1 or ", n, ".\n"
     )
 
     stop(error_msg, call. = FALSE)
@@ -422,5 +420,5 @@ expand_params <- function(theta, n) {
 #' # Verification
 #' all.equal(theta_cols, theta_restored) # TRUE
 transpose_params <- function(theta) {
-  lapply(purrr::transpose(theta), unlist)
+  purrr::transpose(theta)
 }
