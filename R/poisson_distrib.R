@@ -79,7 +79,7 @@ poisson_distrib <- function(link_mu = log_link()) {
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qpois(
       p = p,
       lambda = theta[[1]],

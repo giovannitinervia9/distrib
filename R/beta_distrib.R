@@ -99,7 +99,7 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     mu <- theta[[1]]
     phi <- theta[[2]]
     stats::qbeta(
@@ -211,7 +211,7 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   }
 
   o$median <- function(theta) {
-    o$qf(.5, theta)
+    o$quantile(.5, theta)
   }
 
   o$mode <- function(theta) {

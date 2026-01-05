@@ -57,7 +57,7 @@
 #' \item{type}{The type of distribution ("continuous").}
 #' \item{params}{The names of the parameters ("mu", "sigma").}
 #' \item{params_bounds}{The bounds of the parameters.}
-#' \item{pdf, cdf, qf, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
+#' \item{pdf, cdf, quantile, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
 #' \item{gradient}{A function to calculate the gradient of the log-pdf.}
 #' \item{hessian}{A function to calculate the Hessian matrix (observed or expected).}
 #'
@@ -104,7 +104,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
       mean = theta[[1]],
@@ -287,7 +287,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
       mean = theta[[1]],
@@ -468,7 +468,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnorm(
       p = p,
       mean = theta[[1]],

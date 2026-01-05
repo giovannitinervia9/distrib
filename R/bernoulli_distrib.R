@@ -81,7 +81,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qbinom(
       p = p,
       size = 1,

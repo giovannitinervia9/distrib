@@ -19,7 +19,7 @@ A list of class \code{"distrib"} containing:
 \item{type}{The type of distribution ("continuous").}
 \item{params}{The names of the parameters ("mu", "sigma").}
 \item{params_bounds}{The bounds of the parameters.}
-\item{pdf, cdf, qf, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
+\item{pdf, cdf, quantile, rng}{Functions for density, cumulative probability, quantiles, and random generation.}
 \item{gradient}{A function to calculate the gradient of the log-pdf.}
 \item{hessian}{A function to calculate the Hessian matrix (observed or expected).}
 }

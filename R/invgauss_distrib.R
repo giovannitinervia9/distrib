@@ -107,7 +107,7 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     statmod::qinvgauss(
       p = p,
       mean = theta[[1]],
@@ -208,7 +208,7 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
   }
 
   o$median <- function(theta) {
-    o$qf(.5, theta)
+    o$quantile(.5, theta)
   }
 
   o

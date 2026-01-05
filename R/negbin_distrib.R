@@ -57,7 +57,7 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qnbinom(
       p = p,
       mu = theta[[1]],

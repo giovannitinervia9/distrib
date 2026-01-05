@@ -52,22 +52,70 @@
 #   }
 #
 #   o$cdf <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
-#     cdf.distrib(o, q, theta, lower.tail, log.p)
+#     distrib:::cdf.distrib(o, q, theta, lower.tail, log.p)
 #   }
 #
-#   o$qf <- function(p, theta, lower.tail = FALSE, log.p = FALSE) {
-#     if (log.p) {
-#       p <- exp(p)
-#     }
+#   o$quantile <- function(p, theta, lower.tail = FALSE, log.p = FALSE) {
+#     distrib:::quantile.distrib(o, p, theta, lower.tail, log.p)
+#   }
 #
-#     if (lower.tail) {
-#       p <- 1 - p
-#     }
+#   o$loglik <- function(y, theta) {
+#     o$pdf(y, theta, log = TRUE)
+#   }
 #
-#     newton_step <- function(y, p, theta) {
-#       (o$cdf(y, theta) - p) / o$pdf(y, theta)
+#   o$gradient <- function(y, theta) {
+#     mu <- theta[[1]]
+#     sigma <- theta[[2]]
+#     nu <- theta[[3]]
+#     res <- y - mu
+#     res2 <- res * res
+#     sigma2 <- sigma * sigma
+#     den <- sqrt(nu + res2 / sigma2)
+#     sq_nu <- sqrt(nu)
+#     dmu <- res / (sigma2 * sqrt(nu + res2 / sigma2))
+#     list(
+#       mu = dmu,
+#       sigma = (res * dmu - 1) / sigma,
+#       nu = -.5 / nu - .5 / den - .5 * (dbesselK(sq_nu, 1) / besselK(sq_nu, 1)) / sq_nu
+#     )
+#   }
+#
+#   o$hessian <- function(y, theta, expected = FALSE) {
+#     mu <- theta[[1]]
+#     sigma <- theta[[2]]
+#     nu <- theta[[3]]
+#     res <- y - mu
+#     res2 <- res * res
+#     sigma2 <- sigma * sigma
+#     sigma4 <- sigma2 * sigma2
+#     den <- sqrt(nu + res2 / sigma2)
+#     sq_nu <- sqrt(nu)
+#     bk <- besselK(sq_nu, 1, expon.scaled = TRUE)
+#     r1 <- dbesselK(sq_nu, 1, deriv = 1, expon.scaled = TRUE, mode = "standard") / bk
+#     r2 <- dbesselK(sq_nu, 1, deriv = 2, expon.scaled = TRUE, mode = "standard") / bk
+#
+#     if (expected) {
+#       list(
+#         mu_mu = ,
+#         sigma_sigma = ,
+#         nu_nu = ,
+#         mu_sigma = 0,
+#         mu_nu = 0,
+#         sigma_nu =
+#         )
+#     } else {
+#       list(
+#         mu_mu = -nu / (sigma2 * den^3),
+#         sigma_sigma = (sigma4 - 3 * sigma2 * res2 / den + res2 * res2 / den^3) / (sigma4 * sigma2),
+#         nu_nu = 0.25 / (den^3) + 0.5 / (nu^2) + 0.25 * (r1 * nu^(-1.5) + r1^2 / nu - r2 / nu),
+#         mu_sigma = (-2 * nu * sigma2 * res - res^3) / (sigma2 * (nu * sigma2 + res^2)^1.5),
+#         mu_nu = (-res / (2 * sigma2)) / (((res2 + nu * sigma2) / sigma2)^1.5),
+#         sigma_nu = (-res^2) / (2 * sigma2 * sigma * den^3)
+#       )
 #     }
 #   }
+#
+#
 #
 #   o$mean <- o$median <- o$mode <- function(theta) {
 #     theta[[1]]

@@ -101,7 +101,7 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     mu <- theta[[1]]
     sigma2 <- theta[[2]]
     stats::qgamma(
@@ -217,7 +217,7 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
   }
 
   o$median <- function(theta) {
-    o$qf(.5, theta)
+    o$quantile(.5, theta)
   }
 
   o

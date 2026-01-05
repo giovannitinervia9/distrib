@@ -95,7 +95,7 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     stats::qlnorm(
       p = p,
       meanlog = theta[[1]],

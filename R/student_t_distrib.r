@@ -128,7 +128,7 @@ student_t_distrib <- function(
     )
   }
 
-  o$qf <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     mu <- theta[[1]]
     sigma <- theta[[2]]
     nu <- theta[[3]]

@@ -72,8 +72,8 @@ plot.distrib <- function(x, theta, xlim = NULL, ...) {
   }
 
   if (is.null(xlim)) {
-    lower_q <- x$qf(0.01, theta)
-    upper_q <- x$qf(0.99, theta)
+    lower_q <- x$quantile(0.01, theta)
+    upper_q <- x$quantile(0.99, theta)
 
     if (x$type == "discrete") {
       lower_q <- floor(lower_q)

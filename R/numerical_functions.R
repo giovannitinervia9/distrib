@@ -1,3 +1,116 @@
+#' Derivatives of the Modified Bessel Function of the Second Kind
+#'
+#' Calculates the n-th order derivative of the modified Bessel function of the second kind, \eqn{K_\nu(x)}.
+#'
+#' @param x Numeric vector. The input argument (must be > 0).
+#' @param nu Numeric vector. The order of the Bessel function.
+#' @param deriv Integer. The order of the derivative to compute (must be \eqn{\ge 0}). Defaults to 1.
+#' @param expon.scaled Logical. Controls exponential scaling.
+#'        \itemize{
+#'          \item If \code{mode = "standard"}: If \code{TRUE}, returns \eqn{e^x \cdot K^{(n)}_\nu(x)}. If \code{FALSE}, returns \eqn{K^{(n)}_\nu(x)}.
+#'          \item If \code{mode = "deriv_scaled"}: This argument is ignored because the target function is inherently scaled.
+#'        }
+#' @param mode Character string. Determines the type of derivative to compute:
+#'        \itemize{
+#'          \item \code{"standard"} (Default): Computes the derivative of the Bessel function itself.
+#'          \item \code{"deriv_scaled"}: Computes the derivative of the scaled Bessel function.
+#'        }
+#'
+#' @details
+#' The function implements two different mathematical approaches based on \code{mode}:
+#'
+#' \strong{1. Standard Mode (\code{mode = "standard"}):} \cr
+#' Calculates \eqn{\frac{d^n}{dx^n} K_\nu(x)}. \cr
+#' It uses the recurrence relation:
+#' \deqn{K^{(n)}_\nu(x) = (-1/2)^n \sum_{k=0}^{n} \binom{n}{k} K_{\nu - n + 2k}(x)}
+#' If \code{expon.scaled = TRUE}, the result is multiplied by \eqn{e^x} to prevent underflow for large \eqn{x}.
+#'
+#' \strong{2. Scaled Derivative Mode (\code{mode = "deriv_scaled"}):} \cr
+#' Calculates the derivative of the product \eqn{e^x K_\nu(x)}.
+#' \deqn{\frac{d^n}{dx^n} \left( e^x K_\nu(x) \right)}
+#' Using the General Leibniz rule, this expands to:
+#' \deqn{e^x \sum_{j=0}^{n} \binom{n}{j} K^{(j)}_\nu(x)}
+#'
+#' @return A numeric vector of the same length as \code{x} (or \code{nu}).
+#'
+#' @examples
+#' # --- Case 1: Standard derivative K'(x) ---
+#' # Analytical derivative
+#' dy <- dbesselK(x = 5, nu = 1, deriv = 1, mode = "standard")
+#'
+#' # --- Case 2: Scaled derivative for large x ---
+#' # Returns e^x * K'(x)
+#' dy_scaled <- dbesselK(x = 1000, nu = 1, deriv = 1, expon.scaled = TRUE)
+#'
+#' # --- Case 3: Derivative of the scaled function (numDeriv compat) ---
+#' # We want d/dx (e^x * K(x))
+#' library(numDeriv)
+#' x_val <- 2
+#'
+#' # Numerical result
+#' f_sc <- function(x) besselK(x, 1, expon.scaled = TRUE)
+#' num_res <- grad(f_sc, x_val)
+#'
+#' # Analytical result using mode = "deriv_scaled"
+#' ana_res <- dbesselK(x_val, 1, deriv = 1, mode = "deriv_scaled")
+#'
+#' c(Numerical = num_res, Analytical = ana_res)
+#'
+#' @export
+dbesselK <- function(x, nu, deriv = 1L, expon.scaled = FALSE, mode = c("standard", "deriv_scaled")) {
+  if (deriv < 0) {
+    stop("Derivative order must be >= 0.")
+  }
+
+  mode <- match.arg(mode)
+
+  if (deriv == 0) {
+    return(besselK(x, nu, expon.scaled = if (mode == "deriv_scaled") TRUE else expon.scaled))
+  }
+
+  n <- deriv
+
+  # Determine loop sequence:
+  # - deriv_scaled: 0 to n (Leibniz rule requires sum of all lower order derivatives).
+  # - standard: just n (Direct calculation of the n-th derivative).
+  j_seq <- if (mode == "deriv_scaled") {
+    0:n
+  } else {
+    n
+  }
+
+  res <- 0
+
+  for (j in j_seq) {
+    # Compute pure scaled derivative of order j
+    # Formula uses: (-0.5)^j * sum( binomial * K_nu_adjusted )
+    s <- 0
+    for (k in 0:j) {
+      s <- s + choose(j, k) * besselK(x, nu - j + 2 * k, expon.scaled = TRUE)
+    }
+    val_j <- ((-0.5)^j) * s
+
+    # If Leibniz (deriv_scaled): weighted accumulation of terms.
+    # If Standard: direct assignment (loop runs only once).
+    if (mode == "deriv_scaled") {
+      res <- res + choose(n, j) * val_j
+    } else {
+      res <- val_j
+    }
+  }
+
+  # Remove scaling only if mode is "standard" and user did NOT request scaling.
+  # (In "deriv_scaled", the result is naturally scaled by e^x due to the Leibniz expansion).
+  if (mode == "standard" && !expon.scaled) {
+    res * exp(-x)
+  } else {
+    res
+  }
+}
+
+
+
+
 #' Numerical Summation of Discrete Series
 #'
 #' Calculates the sum of a function `f(x)` over a sequence of integers from `start` to `end`.
@@ -745,4 +858,91 @@ quantile.distrib <- function(x, p, theta, lower.tail = TRUE, log.p = FALSE, ...)
     p_val = p,
     theta_val = theta_list
   )
+}
+
+
+
+
+#' Calculate the Expected Value of a Function
+#'
+#' Computes the expected value of a given function \eqn{f(y)} with respect to a probability distribution defined by \code{distrib}.
+#' It automatically handles continuous distributions (via numerical integration) and discrete distributions (via series summation).
+#'
+#' @param distrib An object of class \code{"distrib"}
+#' @param f A function representing the transformation of the random variable \eqn{y}.
+#'   **Signature:** It must accept arguments \code{y}, \code{theta}, and \code{...} (see Details).
+#' @param theta A named list of parameters for the distribution.
+#' @param ... Additional arguments passed directly to the function \code{f}.
+#'   These allow parametrizing the transformation function (e.g., passing an exponent or shift parameter).
+#'
+#' @details
+#' The function calculates:
+#' \itemize{
+#'   \item \eqn{E[f(Y)] = \int_{lb}^{ub} f(y, \theta, \dots) \cdot p(y|\theta) \, dy} (Continuous)
+#'   \item \eqn{E[f(Y)] = \sum_{y=lb}^{ub} f(y, \theta, \dots) \cdot P(y|\theta)} (Discrete)
+#' }
+#'
+#' **Requirements for `f`:**
+#' The user-provided function \code{f} must be defined with the signature:
+#' \code{f(y, theta, ...)}
+#' where:
+#' \itemize{
+#'   \item \code{y}: The integration/summation variable (numeric vector).
+#'   \item \code{theta}: A named list of parameters for the distribution (e.g., \code{list(mu=2, theta=1)}).
+#'   \item \code{...}: Optional additional arguments to support custom parameters passed via \code{expectation}.
+#' }
+#'
+#' @return A numeric vector containing the expected values. The length corresponds to the
+#'   longest parameter vector in \code{theta}.
+#'
+#' @importFrom stats integrate
+#'
+#' @examples
+#' \dontrun{
+#' # Example 1: Expected value of y^gamma (Raw Moment)
+#' distrib <- negbin_distrib()
+#' theta <- list(mu = 10, theta = 1)
+#'
+#' # Define f accepting y, theta, and extra parameter gamma
+#' f_pow <- function(y, theta, gamma = 1) {
+#'   y^gamma
+#' }
+#'
+#' # Calculate E[y^2]
+#' expectation(distrib, f_pow, theta, gamma = 2)
+#'
+#' # Example 2: Trig transformation
+#' f_trig <- function(y, theta, ...) {
+#'   sin(y)
+#' }
+#' expectation(distrib, f_trig, theta)
+#' }
+#'
+#' @export
+expectation <- function(distrib, f, theta, ...) {
+  type <- distrib$type
+  bounds <- distrib$bounds
+  pdf <- distrib$pdf
+  params <- distrib$params
+
+  max_dim_theta <- max(lengths(theta))
+  check_params_dim(theta)
+
+  lb <- distrib$bounds[1]
+  ub <- distrib$bounds[2]
+
+  f_internal <- function(y, theta, ...) {
+    f(y, theta, ...) * pdf(y, theta, log = FALSE)
+  }
+
+  if (type == "continuous") {
+    FUN <- function(theta) {
+      integrate(\(y) f_internal(y, theta, ...), lower = lb, upper = ub)$value
+    }
+  } else if (type == "discrete") {
+    FUN <- function(theta) {
+      series(\(y) f_internal(y, theta, ...), start = lb, end = ub)
+    }
+  }
+  sapply(transpose_params(expand_params(theta)), FUN)
 }

@@ -31,7 +31,7 @@
 #'
 #'   \item{\code{pdf}}{A function \code{pdf(y, theta, log = FALSE)} that computes the probability density (or mass) function. \code{theta} must be a named list of parameters.}
 #'   \item{\code{cdf}}{A function \code{cdf(q, theta, lower.tail = TRUE, log.p = FALSE)} that computes the cumulative distribution function.}
-#'   \item{\code{qf}}{A function \code{qf(p, theta, lower.tail = TRUE, log.p = FALSE)} that computes the quantile function (inverse CDF).}
+#'   \item{\code{quantile}}{A function \code{quantile(p, theta, lower.tail = TRUE, log.p = FALSE)} that computes the quantile function (inverse CDF).}
 #'   \item{\code{rng}}{A function \code{rng(n, theta)} that generates \code{n} random draws from the distribution.}
 #'
 #'   \item{\code{loglik}}{A function \code{loglik(y, theta)} that computes the log-likelihood (wrapper for \code{pdf(..., log=TRUE)}).}
