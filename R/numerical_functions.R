@@ -871,9 +871,11 @@ quantile.distrib <- function(x, p, theta, lower.tail = TRUE, log.p = FALSE, ...)
 #' @param distrib An object of class \code{"distrib"}
 #' @param f A function representing the transformation of the random variable \eqn{y}.
 #'   **Signature:** It must accept arguments \code{y}, \code{theta}, and \code{...} (see Details).
-#' @param theta A named list of parameters for the distribution.
+#' @param theta A named list of parameters for the distribution (e.g., \code{list(mu=10, sigma=2)}).
+#'   Vectors inside this list allow computing expectations for multiple distribution parametrizations at once.
 #' @param ... Additional arguments passed directly to the function \code{f}.
-#'   These allow parametrizing the transformation function (e.g., passing an exponent or shift parameter).
+#'   **Vectorization:** These arguments are fully vectorized. If vectors are provided, they are recycled
+#'   against the parameters in \code{theta} according to standard R recycling rules.
 #'
 #' @details
 #' The function calculates:
@@ -882,67 +884,83 @@ quantile.distrib <- function(x, p, theta, lower.tail = TRUE, log.p = FALSE, ...)
 #'   \item \eqn{E[f(Y)] = \sum_{y=lb}^{ub} f(y, \theta, \dots) \cdot P(y|\theta)} (Discrete)
 #' }
 #'
+#' **Vectorization:**
+#' The function iterates over the longest vector found among \code{theta} and \code{...}.
+#' For example, if \code{theta$mu} has length 2 and you pass a vector of length 2 to \code{...},
+#' the function computes the expectation for the paired values. If lengths differ, standard R recycling applies.
+#'
 #' **Requirements for `f`:**
 #' The user-provided function \code{f} must be defined with the signature:
 #' \code{f(y, theta, ...)}
-#' where:
-#' \itemize{
-#'   \item \code{y}: The integration/summation variable (numeric vector).
-#'   \item \code{theta}: A named list of parameters for the distribution (e.g., \code{list(mu=2, theta=1)}).
-#'   \item \code{...}: Optional additional arguments to support custom parameters passed via \code{expectation}.
-#' }
 #'
 #' @return A numeric vector containing the expected values. The length corresponds to the
-#'   longest parameter vector in \code{theta}.
+#'   maximum length among all vectors in \code{theta} and \code{...}.
 #'
 #' @importFrom stats integrate
 #'
 #' @examples
 #' \dontrun{
-#' # Example 1: Expected value of y^gamma (Raw Moment)
 #' distrib <- negbin_distrib()
-#' theta <- list(mu = 10, theta = 1)
 #'
 #' # Define f accepting y, theta, and extra parameter gamma
 #' f_pow <- function(y, theta, gamma = 1) {
 #'   y^gamma
 #' }
 #'
-#' # Calculate E[y^2]
-#' expectation(distrib, f_pow, theta, gamma = 2)
+#' # --- Example 1: Basic usage ---
+#' # Calculate E[y^2] for mu=10
+#' expectation(distrib, f_pow, theta = list(mu = 10, theta = 1), gamma = 2)
 #'
-#' # Example 2: Trig transformation
-#' f_trig <- function(y, theta, ...) {
-#'   sin(y)
-#' }
-#' expectation(distrib, f_trig, theta)
+#' # --- Example 2: Vectorization over '...' ---
+#' # Calculate 1st, 2nd, and 3rd raw moments (E[y^1], E[y^2], E[y^3]) simultaneously
+#' # mu is fixed at 10, gamma varies (1, 2, 3)
+#' expectation(distrib, f_pow, theta = list(mu = 10, theta = 1), gamma = c(1, 2, 3))
+#'
+#' # --- Example 3: Joint Vectorization ---
+#' # Calculate E[y^1] for mu=10 and E[y^2] for mu=20
+#' expectation(distrib, f_pow,
+#'   theta = list(mu = c(10, 20), theta = 1),
+#'   gamma = c(1, 2)
+#' )
 #' }
 #'
 #' @export
 expectation <- function(distrib, f, theta, ...) {
-  type <- distrib$type
-  bounds <- distrib$bounds
-  pdf <- distrib$pdf
-  params <- distrib$params
-
-  max_dim_theta <- max(lengths(theta))
-  check_params_dim(theta)
-
-  lb <- distrib$bounds[1]
-  ub <- distrib$bounds[2]
-
-  f_internal <- function(y, theta, ...) {
-    f(y, theta, ...) * pdf(y, theta, log = FALSE)
+  # Capture extra arguments and check for name collisions
+  dots <- list(...)
+  if (any(names(dots) %in% names(theta))) {
+    stop("Arguments in '...' cannot have the same names as parameters in 'theta'.")
   }
 
-  if (type == "continuous") {
-    FUN <- function(theta) {
-      integrate(\(y) f_internal(y, theta, ...), lower = lb, upper = ub)$value
+  # Combine all parameters to handle vectorization
+  all_params <- c(theta, dots)
+  n_theta <- distrib$n_params
+
+  # Define the worker function for a single set of parameters
+  compute_single <- function(params) {
+    # Extract specific subsets
+    p_theta <- params[1:n_theta] # Strictly for the distribution
+
+    p_dots <- params[-(1:n_theta)] # Strictly for the function f
+
+    # Internal function to integrate/sum
+    integrand <- function(y) {
+      # Call f(y, theta, ...) dynamically
+      val_f <- do.call(f, c(list(y = y, theta = p_theta), p_dots))
+
+      # Call pdf(y, theta) strictly
+      val_p <- distrib$pdf(y, p_theta, log = FALSE)
+
+      val_f * val_p
     }
-  } else if (type == "discrete") {
-    FUN <- function(theta) {
-      series(\(y) f_internal(y, theta, ...), start = lb, end = ub)
+
+    # Execute based on distribution type
+    if (distrib$type == "continuous") {
+      integrate(integrand, lower = distrib$bounds[1], upper = distrib$bounds[2])$value
+    } else {
+      series(integrand, start = distrib$bounds[1], end = distrib$bounds[2])
     }
   }
-  sapply(transpose_params(expand_params(theta)), FUN)
+
+  sapply(transpose_params(expand_params(all_params)), compute_single)
 }
