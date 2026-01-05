@@ -4,7 +4,15 @@
 \alias{series}
 \title{Numerical Summation of Discrete Series}
 \usage{
-series(f, start, end = Inf, step = 100, tol = 1e-10, maxit = 1e+05)
+series(
+  f,
+  start = 0,
+  end = Inf,
+  step = 1000,
+  tol = 1e-10,
+  maxit = 1e+07,
+  reltol = TRUE
+)
 }
 \arguments{
 \item{f}{A function taking a vector of integers \code{x} and returning a vector of numeric values.
@@ -16,13 +24,15 @@ series(f, start, end = Inf, step = 100, tol = 1e-10, maxit = 1e+05)
 Defaults to \code{Inf}.}
 
 \item{step}{Integer. The number of terms to calculate in a single vectorized batch.
-Larger values generally improve speed but increase memory usage. Defaults to 100.}
+Defaults to 10000.}
 
-\item{tol}{Numeric. Tolerance threshold for convergence. The series stops when the
-sum of the current batch is less than \code{tol}. Defaults to \code{1e-10}.}
+\item{tol}{Numeric. Tolerance threshold for convergence. Defaults to \code{1e-10}.}
 
-\item{maxit}{Integer. Safety limit for the maximum number of batch iterations to prevent
-infinite loops in non-convergent series. Defaults to 100,000.}
+\item{maxit}{Integer. Safety limit for the maximum number of batch iterations.
+Defaults to 1000000.}
+
+\item{reltol}{Logical. If \code{TRUE} (default), uses a \strong{hybrid relative tolerance} criterion:
+\code{tol*max(abs(s), 1)}.  If \code{FALSE}, uses strict \strong{absolute tolerance} (\code{tol}).}
 }
 \value{
 A numeric scalar representing the calculated sum.
@@ -46,8 +56,12 @@ It first calculates \eqn{f(0)}, then iterates \eqn{x} from 1 to \eqn{\infty}, su
 
 \strong{2. Vectorization and Convergence:}
 The summation is performed in blocks of size \code{step} to leverage R's vectorization capabilities.
-For infinite bounds, the function checks for convergence: the loop terminates when the sum of
-the current block (size \code{step}) drops below the tolerance threshold \code{tol}.
+For infinite bounds, the function checks for convergence based on the \code{reltol} parameter.
+
+\strong{3. Underflow Protection:}
+The function includes logic to prevent premature stopping if the series starts with a sequence
+of zeros (e.g., a distribution centered far from the start). It continues searching until
+a significant sum is accumulated (\code{s > tol}).
 }
 \examples{
 # --- Case 1: Standard Convergent Series (Basel Problem) ---
@@ -55,18 +69,10 @@ the current block (size \code{step}) drops below the tolerance threshold \code{t
 f_basel <- function(x) 1 / x^2
 series(f_basel, start = 1, end = Inf)
 
-# --- Case 2: Finite Sum ---
-# Sum from 1 to 5
-series(f_basel, start = 1, end = 5)
-
-# --- Case 3: Backward Series (Negative Domain) ---
-# Sum of 1/x^2 from -1 down to -Inf
-series(f_basel, start = -1, end = -Inf)
-
-# --- Case 4: Doubly Infinite Series (Discretized Normal) ---
-# Sum of Normal density over all integers Z (-Inf to +Inf)
-# Should sum to approximately 1
-f_norm <- function(x) dnorm(x)
-series(f_norm, start = -Inf, end = Inf)
+# --- Case 2: Expectation of Poisson (Large Mean) ---
+d <- poisson_distrib()
+theta <- list(mu = 10000)
+f_mean <- function(x) x * d$pdf(x, theta)
+series(f_mean, start = 0, end = Inf, reltol = TRUE)
 
 }

@@ -129,8 +129,12 @@ dbesselK <- function(x, nu, deriv = 1L, expon.scaled = FALSE, mode = c("standard
 #'
 #' **2. Vectorization and Convergence:**
 #' The summation is performed in blocks of size `step` to leverage R's vectorization capabilities.
-#' For infinite bounds, the function checks for convergence: the loop terminates when the sum of
-#' the current block (size `step`) drops below the tolerance threshold `tol`.
+#' For infinite bounds, the function checks for convergence based on the `reltol` parameter.
+#'
+#' **3. Underflow Protection:**
+#' The function includes logic to prevent premature stopping if the series starts with a sequence
+#' of zeros (e.g., a distribution centered far from the start). It continues searching until
+#' a significant sum is accumulated (`s > tol`).
 #'
 #' @param f A function taking a vector of integers `x` and returning a vector of numeric values.
 #'   **Must be vectorized** (able to handle multiple inputs at once).
@@ -138,11 +142,12 @@ dbesselK <- function(x, nu, deriv = 1L, expon.scaled = FALSE, mode = c("standard
 #' @param end Numeric. The ending value of the sequence. Can be finite, `Inf`, or `-Inf`.
 #'   Defaults to `Inf`.
 #' @param step Integer. The number of terms to calculate in a single vectorized batch.
-#'   Larger values generally improve speed but increase memory usage. Defaults to 100.
-#' @param tol Numeric. Tolerance threshold for convergence. The series stops when the
-#'   sum of the current batch is less than `tol`. Defaults to `1e-10`.
-#' @param maxit Integer. Safety limit for the maximum number of batch iterations to prevent
-#'   infinite loops in non-convergent series. Defaults to 100,000.
+#'   Defaults to 10000.
+#' @param tol Numeric. Tolerance threshold for convergence. Defaults to `1e-10`.
+#' @param maxit Integer. Safety limit for the maximum number of batch iterations.
+#'   Defaults to 1000000.
+#' @param reltol Logical. If `TRUE` (default), uses a **hybrid relative tolerance** criterion:
+#'   `tol*max(abs(s), 1)`.  If `FALSE`, uses strict **absolute tolerance** (\code{tol}).
 #'
 #' @return A numeric scalar representing the calculated sum.
 #'
@@ -152,22 +157,15 @@ dbesselK <- function(x, nu, deriv = 1L, expon.scaled = FALSE, mode = c("standard
 #' f_basel <- function(x) 1 / x^2
 #' series(f_basel, start = 1, end = Inf)
 #'
-#' # --- Case 2: Finite Sum ---
-#' # Sum from 1 to 5
-#' series(f_basel, start = 1, end = 5)
-#'
-#' # --- Case 3: Backward Series (Negative Domain) ---
-#' # Sum of 1/x^2 from -1 down to -Inf
-#' series(f_basel, start = -1, end = -Inf)
-#'
-#' # --- Case 4: Doubly Infinite Series (Discretized Normal) ---
-#' # Sum of Normal density over all integers Z (-Inf to +Inf)
-#' # Should sum to approximately 1
-#' f_norm <- function(x) dnorm(x)
-#' series(f_norm, start = -Inf, end = Inf)
+#' # --- Case 2: Expectation of Poisson (Large Mean) ---
+#' d <- poisson_distrib()
+#' theta <- list(mu = 10000)
+#' f_mean <- function(x) x * d$pdf(x, theta)
+#' series(f_mean, start = 0, end = Inf, reltol = TRUE)
 #'
 #' @export
-series <- function(f, start, end = Inf, step = 100, tol = 1e-10, maxit = 100000) {
+series <- function(f, start = 0, end = Inf, step = 1000, tol = 1e-10, maxit = 10000000, reltol = TRUE) {
+  # --- Setup Range and Direction ---
   if (is.infinite(start) && start < 0 && is.infinite(end) && end > 0) {
     s <- f(0)
     start_internal <- 1
@@ -185,31 +183,55 @@ series <- function(f, start, end = Inf, step = 100, tol = 1e-10, maxit = 100000)
     f_internal <- f
   }
 
+  # --- Loop Initialization ---
+  # Initial eps set high to ensure loop entry
   eps <- 2 * tol
+  climbing <- TRUE
   upper_limit <- min(start_internal + step, end_internal)
-  x <- start_internal:upper_limit
   it <- 0
-  while (eps > tol) {
+
+  # --- Main Loop ---
+  while (climbing && it < maxit) {
     it <- it + 1
 
-    eps <- sum(f_internal(x))
+    # Vectorized calculation
+    x <- start_internal:upper_limit
+    vals <- f_internal(x)
+    eps <- sum(vals)
     s <- s + eps
 
-    last_val <- x[length(x)]
-
-    if (last_val >= end_internal) {
-      break
+    # STOPPING CRITERIA:
+    # 1. Define tolerance type based on user input
+    if (reltol) {
+      # Hybrid/Relative: scales with the magnitude of the sum 's'
+      scaled_tol <- tol * max(abs(s), 1)
+    } else {
+      # Absolute: strict fixed threshold
+      scaled_tol <- tol
     }
 
-    next_start <- last_val + 1
-    next_limit <- min(next_start + step, end_internal)
-    x <- next_start:next_limit
+    # 2. Check for convergence AND Underflow protection (s > tol)
+    if (eps < scaled_tol && s > tol) {
+      climbing <- FALSE
+    } else {
+      # Advancement
+      start_internal <- upper_limit + 1
 
-    if (it >= maxit) {
-      warning("Series may not be convergent")
-      break
+      if (start_internal > end_internal) {
+        climbing <- FALSE
+      } else {
+        upper_limit <- min(start_internal + step, end_internal)
+      }
     }
   }
+
+  if (it >= maxit) {
+    warning(sprintf(
+      "Max iterations (%d) reached. Sum = %.6e, last eps = %.6e",
+      maxit, s, eps
+    ))
+  }
+
   s
 }
 
