@@ -1077,7 +1077,7 @@ mc_expected_hessian <- function(distrib, y, theta, nsim = 1000) {
   theta_k <- transpose_params(expand_params(theta))
   dim_hess <- .5 * n_params * (n_params + 1)
   out <- vector("list", dim_hess)
-  n <- NROW(y)
+  n <- length(theta_k)
 
   hess_names <- character(dim_hess)
   for (i in 1:n_params) {
