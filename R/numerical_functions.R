@@ -1023,3 +1023,97 @@ expectation <- function(distrib, f, theta, ...) {
 
   sapply(transpose_params(expand_params(all_params)), compute_single)
 }
+
+
+
+
+#' Monte Carlo Approximation of the Expected Hessian
+#'
+#' @description
+#' Approximates the expected Hessian matrix (Fisher Information Matrix elements) for a given
+#' distribution object using Monte Carlo simulation.
+#'
+#' This function relies on the identity that, under regularity conditions, the expected Hessian
+#' is equal to the negative of the expected outer product of the score function (gradients):
+#' \deqn{\mathbb{E}\left[\nabla^2 \ell(\theta)\right] = -\mathbb{E}\left[\nabla \ell(\theta) (\nabla \ell(\theta))^T\right]}
+#'
+#' @param distrib An object of class \code{"distrib"}.
+#'   Must contain \code{params}, \code{gradient}, and \code{rng} components.
+#' @param y A vector or matrix of the observed response variable. Used to determine the number of
+#'   observations (\code{n}).
+#' @param theta A list containing the parameter values.
+#' @param nsim Integer. The number of Monte Carlo simulations to perform for each observation.
+#'   Defaults to 1000. Higher values provide better approximations but increase computation time.
+#'
+#' @details
+#' For each observation \eqn{k} in \code{y}, the function:
+#' \enumerate{
+#'   \item Simulates \code{nsim} random values from the distribution using the parameters \eqn{\theta_k}.
+#'   \item Calculates the gradient (score vector) for these simulated values.
+#'   \item Computes the empirical mean of the negative cross-products of the gradients.
+#' }
+#'
+#' The resulting approximation is useful when the analytical expected Hessian is difficult
+#' or impossible to derive in closed form.
+#'
+#' @return A named list of length \eqn{p(p+1)/2} (where \eqn{p} is the number of parameters),
+#' containing the unique elements of the expected Hessian matrix.
+#'
+#' The list elements are named as follows:
+#' \itemize{
+#'   \item Diagonal elements: \code{"par_par"} (e.g., \code{"mu_mu"}, \code{"sigma_sigma"})
+#'   \item Off-diagonal elements: \code{"par1_par2"} (e.g., \code{"mu_sigma"}), stored in the order
+#'     defined by the distribution object.
+#' }
+#' Each element of the list is a numeric vector of length \code{NROW(y)}, representing the
+#' expected second derivative for each observation.
+#'
+#'
+#' @export
+mc_expected_hessian <- function(distrib, y, theta, nsim = 1000) {
+  params <- distrib$params
+  n_params <- distrib$n_params
+  gradient <- distrib$gradient
+  theta_k <- transpose_params(expand_params(theta))
+  dim_hess <- .5 * n_params * (n_params + 1)
+  out <- vector("list", dim_hess)
+  n <- NROW(y)
+
+  hess_names <- character(dim_hess)
+  for (i in 1:n_params) {
+    hess_names[i] <- paste0(params[i], "_", params[i])
+  }
+  idx <- n_params + 1
+  for (i in 1:(n_params - 1)) {
+    for (j in (i + 1):n_params) {
+      hess_names[idx] <- paste0(params[i], "_", params[j])
+      idx <- idx + 1
+    }
+  }
+
+  names(out) <- hess_names
+
+  for (i in 1:dim_hess) {
+    out[[i]] <- numeric(n)
+  }
+
+  for (k in 1:n) {
+    g <- distrib$gradient(
+      distrib$rng(nsim, theta_k[[k]]),
+      theta_k[[k]]
+    )
+    k_mixed <- n_params + 1
+    for (i in 1:n_params) {
+      for (j in i:n_params) {
+        if (i == j) {
+          idx <- i
+        } else {
+          idx <- k_mixed
+          k_mixed <- k_mixed + 1
+        }
+        out[[idx]][k] <- mean(-g[[i]] * g[[j]])
+      }
+    }
+  }
+  out
+}
