@@ -79,16 +79,33 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
     mu <- theta[[1]]
     theta <- theta[[2]]
     y_plus_theta <- y + theta
     th_plus_mu <- theta + mu
     th_frac_th_plus_mu <- theta / th_plus_mu
-    list(
-      mu = th_frac_th_plus_mu * (y / mu - 1),
-      theta = -digamma(theta) + digamma(y_plus_theta) + log(th_frac_th_plus_mu) - (y - mu) / (th_plus_mu)
-    )
+    g <- list()
+
+    if ("mu" %in% par) {
+      g$mu <- th_frac_th_plus_mu*(y/mu - 1)
+    }
+
+    if ("theta" %in% par) {
+      g$theta <- -digamma(theta) + digamma(y_plus_theta) + log(th_frac_th_plus_mu) - (y - mu)/(th_plus_mu)
+    }
+    g
   }
 
   # function to compute expectation of trigamma(y + theta) for expected hessian

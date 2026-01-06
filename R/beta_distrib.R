@@ -125,10 +125,22 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
+
     mu <- theta[[1]]
     phi <- theta[[2]]
-
     alpha <- mu * phi
     beta <- (1 - mu) * phi
 
@@ -139,10 +151,15 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
     log_1_y <- log(1 - y)
     log_ratio <- log_y - log_1_y # log(y / (1-y))
 
-    list(
-      mu = phi * (log_ratio - digamma_alpha + digamma_beta),
-      phi = digamma(phi) - mu * digamma_alpha - (1 - mu) * digamma_beta + mu * log_y + (1 - mu) * log_1_y
-    )
+    g <- list()
+
+    if ("mu" %in% par) {
+      g$mu <- phi * (log_ratio - digamma_alpha + digamma_beta)
+    }
+    if ("phi" %in% par) {
+      g$phi <- digamma(phi) - mu * digamma_alpha - (1 - mu) * digamma_beta + mu * log_y + (1 - mu) * log_1_y
+    }
+    g
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {

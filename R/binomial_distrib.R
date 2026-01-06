@@ -109,7 +109,19 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
     mu <- theta[[1]]
     n_trials <- o$size
     list(

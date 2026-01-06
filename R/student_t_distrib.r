@@ -154,18 +154,37 @@ student_t_distrib <- function(
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+
+    if (is.null(par)) {
+      par <- o$params
+    }
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
+
     mu <- theta[[1]]
     sigma <- theta[[2]]
     nu <- theta[[3]]
     res <- y - mu
     res2 <- res * res
     sigma2 <- sigma * sigma
-    list(
-      mu = ((nu + 1) * res) / (nu * sigma2 + res2),
-      sigma = (nu * (res2 - sigma2)) / (sigma * (nu * sigma2 + res2)),
-      nu = 0.5 * (-1 / nu - digamma(nu / 2) + digamma((nu + 1) / 2) + ((nu + 1) * (y - mu)^2) / (nu * ((y - mu)^2 + nu * sigma^2)) - log(((y - mu)^2) / (nu * sigma^2) + 1))
-    )
+    g <- list()
+    if ("mu" %in% par) {
+      g$mu <- ((nu + 1)*res)/(nu*sigma2 + res2)
+    }
+    if ("sigma" %in% par) {
+      g$sigma <- (nu*(res2 - sigma2))/(sigma*(nu*sigma2 + res2))
+    }
+    if ("nu" %in% par) {
+      g$nu <- 0.5*(-1/nu - digamma(.5*nu) + digamma(.5*(nu + 1)) + ((nu + 1)*(y - mu)^2)/(nu*((y - mu)^2 + nu*sigma^2)) - log(((y - mu)^2)/(nu*sigma^2) + 1))
+    }
+    g
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {

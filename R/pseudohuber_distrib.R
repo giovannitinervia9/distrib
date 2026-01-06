@@ -63,7 +63,18 @@
 #     o$pdf(y, theta, log = TRUE)
 #   }
 #
-#   o$gradient <- function(y, theta) {
+#   o$gradient <- function(y, theta, par = NULL) {
+#     if (is.null(par)) {
+#       par <- o$params
+#     }
+#     invalid_pars <- setdiff(par, o$params)
+#     if (length(invalid_pars) > 0) {
+#       stop(sprintf(
+#         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+#         paste(sQuote(invalid_pars), collapse = ", "),
+#         paste(sQuote(o$params), collapse = ", ")
+#       ))
+#     }
 #     mu <- theta[[1]]
 #     sigma <- theta[[2]]
 #     nu <- theta[[3]]
@@ -72,12 +83,23 @@
 #     sigma2 <- sigma * sigma
 #     den <- sqrt(nu + res2 / sigma2)
 #     sq_nu <- sqrt(nu)
-#     dmu <- res / (sigma2 * sqrt(nu + res2 / sigma2))
-#     list(
-#       mu = dmu,
-#       sigma = (res * dmu - 1) / sigma,
-#       nu = -.5 / nu - .5 / den - .5 * (dbesselK(sq_nu, 1) / besselK(sq_nu, 1)) / sq_nu
-#     )
+#     g <- list()
+#     if ("mu" %in% par) {
+#       g$mu <- res/(sigma2 * den)
+#     }
+#
+#     if ("sigma" %in% par) {
+#       if ("mu" %in% par) {
+#         g$sigma <- (res*g$mu - 1)/sigma
+#       } else {
+#         g$sigma <- ((res*res)/(sigma2*den) - 1)/sigma
+#       }
+#     }
+#
+#     if ("nu" %in% par) {
+#       g$nu <- -.5/nu - .5/den - .5*(dbesselK(sq_nu, 1)/besselK(sq_nu, 1))/sq_nu
+#     }
+#     g
 #   }
 #
 #   o$hessian <- function(y, theta, expected = FALSE) {
@@ -139,4 +161,4 @@
 #
 #   o
 # }
-# #
+#

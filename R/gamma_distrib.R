@@ -127,17 +127,38 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
     mu <- theta[[1]]
     sigma2 <- theta[[2]]
     mu_sigma2 <- mu / sigma2
     mu2_sigma2 <- mu_sigma2 * mu
     digamma_mu2_sigma2 <- digamma(mu2_sigma2)
+    log_mu_sigma2 <- log(mu_sigma2)
+    log_y <- log(y)
 
-    list(
-      mu = (-2 * mu * digamma_mu2_sigma2 + 2 * mu * log(mu_sigma2) + mu + 2 * mu * log(y) - y) / sigma2,
-      sigma2 = -(mu * (-mu * digamma_mu2_sigma2 + mu + mu * (log(mu_sigma2) + log(y)) - y)) / sigma2^2
-    )
+    g <- list()
+
+    if ("mu" %in% par) {
+      g$mu <- (-2*mu*digamma_mu2_sigma2 + 2*mu*log_mu_sigma2 + mu + 2*mu*log_y - y)/sigma2
+    }
+
+    if("sigma2" %in% par) {
+      g$sigma2 <- -(mu*(-mu*digamma_mu2_sigma2 + mu + mu*(log_mu_sigma2 + log_y) - y))/(sigma2*sigma2)
+    }
+
+    g
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
