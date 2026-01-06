@@ -59,6 +59,10 @@
 #     distrib:::quantile.distrib(o, p, theta, lower.tail, log.p)
 #   }
 #
+#   o$rng <- function(n, theta) {
+#     distrib:::rng.distrib(o, n, theta)
+#   }
+#
 #   o$loglik <- function(y, theta) {
 #     o$pdf(y, theta, log = TRUE)
 #   }
@@ -161,4 +165,3 @@
 #
 #   o
 # }
-#

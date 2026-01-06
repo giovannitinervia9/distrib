@@ -2,7 +2,7 @@
 % Please edit documentation in R/numerical_functions.R
 \name{skewness.distrib}
 \alias{skewness.distrib}
-\title{Calculate Kurtosis for Distribution Objects}
+\title{Calculate Skewness for Distribution Objects}
 \usage{
 \method{skewness}{distrib}(x, theta, use_moment = FALSE, ...)
 }
@@ -20,10 +20,10 @@
 A numeric vector representing the kurtosis.
 }
 \description{
-Measures the "tailedness" of the distribution. It uses the analytical formula if available.
-Otherwise, it computes the fourth central moment and divides it by the fourth power of the
-standard deviation.
+Measures the asymmetry of the distribution. It uses the analytical formula if available.
+Otherwise, it computes the third central moment via the \code{\link{moment}} function
+and divides it by the cube of the standard deviation.
 }
 \details{
-Computes the kurtosis (fourth standardized moment) of a distribution object.
+Computes the skewness (third standardized moment) of a distribution object.
 }

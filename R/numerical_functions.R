@@ -456,14 +456,14 @@ std_dev.distrib <- function(x, theta, use_moment = FALSE, ...) {
 
 
 
-#' Calculate Kurtosis for Distribution Objects
+#' Calculate Skewness for Distribution Objects
 #'
-#' Computes the kurtosis (fourth standardized moment) of a distribution object.
+#' Computes the skewness (third standardized moment) of a distribution object.
 #'
 #' @description
-#' Measures the "tailedness" of the distribution. It uses the analytical formula if available.
-#' Otherwise, it computes the fourth central moment and divides it by the fourth power of the
-#' standard deviation.
+#' Measures the asymmetry of the distribution. It uses the analytical formula if available.
+#' Otherwise, it computes the third central moment via the \code{\link{moment}} function
+#' and divides it by the cube of the standard deviation.
 #'
 #' @param x An object of class \code{"distrib"}.
 #' @param theta A named list of parameters.
