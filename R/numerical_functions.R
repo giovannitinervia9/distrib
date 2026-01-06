@@ -885,6 +885,43 @@ quantile.distrib <- function(x, p, theta, lower.tail = TRUE, log.p = FALSE, ...)
 
 
 
+#' Generic Random Number Generator using Inverse Transform Sampling
+#'
+#' @description
+#' Generates random samples for a distribution object using the Inverse Transform Sampling method.
+#' This function acts as a generic fallback for distribution objects that do not have a specialized
+#' \code{rng} method implemented.
+#'
+#' @param x A distribution object of class \code{"distrib"}.
+#'   Must contain a valid \code{quantile} function component.
+#' @param n Integer. The number of observations to be generated.
+#' @param theta A list containing the parameters of the distribution,
+#'   passed to the object's \code{quantile} function.
+#' @param ... Additional arguments (currently ignored).
+#'
+#' @details
+#' This function generates \code{n} uniform random numbers \eqn{u \sim U(0, 1)} using
+#' \code{\link[stats]{runif}} and transforms them into the target distribution using the
+#' object's quantile function:
+#' \deqn{X = Q(u; \theta)}
+#' where \eqn{Q} is the quantile function of the distribution defined in \code{x}.
+#'
+#' While mathematically exact, this method relies on the numerical accuracy of the
+#' \code{quantile} implementation and is generally slower than specialized generation algorithms
+#' if they exist.
+#'
+#' @return A numeric vector of length \code{n} containing the generated random deviates.
+#'
+#' @importFrom stats runif
+#'
+#' @export
+rng.distrib <- function(x, n, theta, ...) {
+  x$quantile(runif(n), theta)
+}
+
+
+
+
 #' Calculate the Expected Value of a Function
 #'
 #' Computes the expected value of a given function \eqn{f(y)} with respect to a probability distribution defined by \code{distrib}.

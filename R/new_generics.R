@@ -130,3 +130,29 @@ kurtosis <- function(x, ...) {
 cdf <- function(x, ...) {
   UseMethod("cdf")
 }
+
+
+
+
+#' Random Number Generator (Generic)
+#'
+#' @description
+#' A generic function to generate random deviates for a given distribution object.
+#' It dispatches to specific methods based on the class of the input object.
+#'
+#' @param x An object representing a probability distribution (e.g., of class \code{"distrib"}).
+#' @param ... Additional arguments passed to specific methods.
+#'   Common arguments usually include:
+#'   \itemize{
+#'     \item \code{n}: Integer, the number of observations to generate.
+#'     \item \code{theta}: A list or vector of parameters.
+#'   }
+#'
+#' @return A numeric vector of generated random deviates.
+#'
+#' @seealso \code{\link{rng.distrib}} for the default method using inverse transform sampling.
+#'
+#' @export
+rng <- function(x, ...) {
+  UseMethod("rng")
+}
