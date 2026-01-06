@@ -126,14 +126,31 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
+
     sigma <- theta[[2]]
     sigma2 <- sigma * sigma
     residuals <- y - theta[[1]]
-    list(
-      mu = residuals / sigma2,
-      sigma = (residuals * residuals - sigma2) / (sigma2 * sigma)
-    )
+    g <- list()
+    if ("mu" %in% par) {
+      g$mu <- residuals / sigma2
+    }
+    if ("sigma" %in% par) {
+      g$sigma <- (residuals * residuals - sigma2) / (sigma2 * sigma)
+    }
+    g
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
@@ -309,13 +326,28 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
     sigma2 <- theta[[2]]
     residuals <- y - theta[[1]]
-    list(
-      mu = residuals / sigma2,
-      sigma2 = (residuals^2 - sigma2) / (2 * sigma2 * sigma2)
-    )
+    g <- list()
+    if ("mu" %in% par) {
+      g$mu <- residuals / sigma2
+    }
+    if ("sigma2" %in% par) {
+      g$sigma2 <- (residuals^2 - sigma2) / (2 * sigma2 * sigma2)
+    }
+    g
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
@@ -490,13 +522,28 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     o$pdf(y, theta, log = TRUE)
   }
 
-  o$gradient <- function(y, theta) {
+  o$gradient <- function(y, theta, par = NULL) {
+    if (is.null(par)) {
+      par <- o$params
+    }
+    invalid_pars <- setdiff(par, o$params)
+    if (length(invalid_pars) > 0) {
+      stop(sprintf(
+        "Invalid parameter(s) specified: %s. Available parameters are: %s.",
+        paste(sQuote(invalid_pars), collapse = ", "),
+        paste(sQuote(o$params), collapse = ", ")
+      ))
+    }
     tau <- theta[[2]]
     residuals <- y - theta[[1]]
-    list(
-      mu = tau * residuals,
-      tau = (1 / (2 * tau)) - (residuals^2 / 2)
-    )
+    g <- list()
+    if ("mu" %in% par) {
+      g$mu <- tau * residuals
+    }
+    if ("tau" %in% par) {
+      g$tau <- (1 / (2 * tau)) - (residuals^2 / 2)
+    }
+    g
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
