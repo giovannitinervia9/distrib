@@ -175,7 +175,7 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
     }
 
     if ("nu" %in% par) {
-      g$nu <- -.5 * (1 / nu - 1 / den - (dbesselK(sq_nu, 1) / besselK(sq_nu, 1)) / sq_nu)
+      g$nu <- -.5 * (1 / nu + 1 / den + (dbesselK(sq_nu, 1) / besselK(sq_nu, 1)) / sq_nu)
     }
     g
   }
@@ -195,9 +195,9 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
       sigma4 <- sigma2 * sigma2
       den <- sqrt(nu + res2 / sigma2)
       sq_nu <- sqrt(nu)
-      bk <- besselK(sq_nu, 1, expon.scaled = TRUE)
-      r1 <- dbesselK(sq_nu, 1, deriv = 1, expon.scaled = TRUE, mode = "standard") / bk
-      r2 <- dbesselK(sq_nu, 1, deriv = 2, expon.scaled = TRUE, mode = "standard") / bk
+      bk <- besselK(sq_nu, 1)
+      r1 <- dbesselK(sq_nu, 1, deriv = 1, mode = "standard") / bk
+      r2 <- dbesselK(sq_nu, 1, deriv = 2, mode = "standard") / bk
       list(
         mu_mu = -nu / (sigma2 * den^3),
         sigma_sigma = (sigma4 - 3 * sigma2 * res2 / den + res2 * res2 / den^3) / (sigma4 * sigma2),
