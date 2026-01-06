@@ -422,3 +422,108 @@ expand_params <- function(theta, n) {
 transpose_params <- function(theta) {
   purrr::transpose(theta)
 }
+
+
+
+
+#' Benchmark Time Complexity of `distrib` Operations
+#'
+#' @description
+#' Evaluates the computational performance of the core operations (log-likelihood,
+#' gradient, and Hessian) for a given distribution object. This function simulates
+#' data and measures execution time to assess scalability with respect to sample size.
+#'
+#' @param n Integer. The sample size (number of observations) to simulate for the benchmark.
+#' @param distrib An object of class \code{"distrib"}.
+#' @param fun A function to summarize the vector of timings returned by the benchmark.
+#'   Defaults to \code{\link[stats]{median}}.
+#' @param times Integer. The number of iterations to perform for each benchmark.
+#'   Defaults to \code{100L}. Higher values provide more stable estimates but increase execution time.
+#' @param ... Additional arguments passed directly to \code{\link[microbenchmark]{microbenchmark}}
+#'   (e.g., \code{control} list).
+#'   \strong{Note:} Passing \code{unit} here will NOT affect the returned values,
+#'   as \code{microbenchmark} always stores raw timings in nanoseconds.
+#'
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item **Simulation**: Generates random parameters \eqn{\theta} by sampling from a standard normal
+#'   distribution and transforming them via the inverse link functions defined in \code{distrib}.
+#'   Then, it generates \code{n} observations \eqn{y} using the distribution's random number generator.
+#'   \item **Benchmarking**: Measures the execution time of \code{loglik(y, theta)},
+#'   \code{gradient(y, theta)}, and \code{hessian(y, theta)} using the \pkg{microbenchmark} package.
+#'   \item **Aggregation**: Applies the summary function \code{fun} to the raw timing results.
+#' }
+#'
+#'
+#' @return A named numeric vector containing the summarized execution times for:
+#' \item{loglik}{The log-likelihood function.}
+#' \item{gradient}{The analytical gradient function.}
+#' \item{hessian}{The analytical Hessian function.}
+#' **The values are always in nanoseconds**, regardless of any \code{unit} argument passed.
+#'
+#' @importFrom microbenchmark microbenchmark
+#' @importFrom stats rnorm
+#' @importFrom stats median
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' d <- gaussian_distrib()
+#' ngrid <- 30
+#' nmin <- 10
+#' nmax <- 10000
+#' n <- round(10^seq(log10(nmin), log10(nmax), l = ngrid))
+#' res <- do.call(rbind, lapply(n, \(n) time_complexity(n, d, times = 20L)))
+#' matplot(n, res, type = "l", lty = 1, lwd = 2, col = c("black", "blue", "red"))
+#' legend("topleft",
+#'   lty = 1, lwd = 2, col = c("black", "blue", "red"),
+#'   legend = c("loglik", "gradient", "hessian")
+#' )
+#' }
+time_complexity <- function(n, distrib, fun = median, times = 100L, ...) {
+  sample_distrib <- function(distrib, n) {
+    n_params <- distrib$n_params
+    b <- distrib$params_bounds
+    links <- distrib$link_params
+    theta <- vector("list", length = n_params)
+    for (i in 1:n_params) {
+      theta[[i]] <- links[[i]]$linkinv(rnorm(n))
+    }
+    y <- distrib$rng(n, theta)
+    list(
+      y = y,
+      theta = theta
+    )
+  }
+  s <- sample_distrib(distrib, n)
+  y <- s$y
+  theta <- s$theta
+  loglik <- distrib$loglik
+  gradient <- distrib$gradient
+  hessian <- distrib$hessian
+
+  time_loglik <- fun(microbenchmark::microbenchmark(
+    loglik(y, theta),
+    times = times,
+    ...
+  )$time)
+
+  time_gradient <- fun(microbenchmark::microbenchmark(
+    gradient(y, theta),
+    times = times,
+    ...
+  )$time)
+
+  time_hessian <- fun(microbenchmark::microbenchmark(
+    hessian(y, theta),
+    times = times,
+    ...
+  )$time)
+
+  c(
+    loglik = time_loglik,
+    gradient = time_gradient,
+    hessian = time_hessian
+  )
+}

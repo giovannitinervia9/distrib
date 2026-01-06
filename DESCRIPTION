@@ -15,6 +15,7 @@ Depends:
 Remotes: 
     giovannitinervia9/linkfunctions
 Imports: 
+    microbenchmark,
     numDeriv,
     purrr,
     statmod

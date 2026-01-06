@@ -128,17 +128,17 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
 
   o$gradient <- function(y, theta) {
     sigma <- theta[[2]]
-    sigma2 <- sigma^2
+    sigma2 <- sigma * sigma
     residuals <- y - theta[[1]]
     list(
       mu = residuals / sigma2,
-      sigma = (residuals^2 - sigma2) / sigma^3
+      sigma = (residuals * residuals - sigma2) / (sigma2 * sigma)
     )
   }
 
   o$hessian <- function(y, theta, expected = FALSE) {
     sigma <- theta[[2]]
-    sigma2 <- sigma^2
+    sigma2 <- sigma * sigma
     if (expected) {
       list(
         mu_mu = -1 / sigma2,
@@ -149,7 +149,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
       residuals <- y - theta[[1]]
       list(
         mu_mu = -1 / sigma2,
-        sigma_sigma = (sigma2 - 3 * residuals^2) / (sigma2 * sigma2),
+        sigma_sigma = (sigma2 - 3 * residuals * residuals) / (sigma2 * sigma2),
         mu_sigma = -2 * residuals / (sigma2 * sigma)
       )
     }
