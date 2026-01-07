@@ -155,7 +155,6 @@ student_t_distrib <- function(
   }
 
   o$gradient <- function(y, theta, par = NULL) {
-
     if (is.null(par)) {
       par <- o$params
     }
@@ -176,13 +175,13 @@ student_t_distrib <- function(
     sigma2 <- sigma * sigma
     g <- list()
     if ("mu" %in% par) {
-      g$mu <- ((nu + 1)*res)/(nu*sigma2 + res2)
+      g$mu <- ((nu + 1) * res) / (nu * sigma2 + res2)
     }
     if ("sigma" %in% par) {
-      g$sigma <- (nu*(res2 - sigma2))/(sigma*(nu*sigma2 + res2))
+      g$sigma <- (nu * (res2 - sigma2)) / (sigma * (nu * sigma2 + res2))
     }
     if ("nu" %in% par) {
-      g$nu <- 0.5*(-1/nu - digamma(.5*nu) + digamma(.5*(nu + 1)) + ((nu + 1)*(y - mu)^2)/(nu*((y - mu)^2 + nu*sigma^2)) - log(((y - mu)^2)/(nu*sigma^2) + 1))
+      g$nu <- 0.5 * (-1 / nu - digamma(.5 * nu) + digamma(.5 * (nu + 1)) + ((nu + 1) * (y - mu)^2) / (nu * ((y - mu)^2 + nu * sigma^2)) - log(((y - mu)^2) / (nu * sigma^2) + 1))
     }
     g
   }
@@ -268,6 +267,18 @@ student_t_distrib <- function(
     ifelse(nu > 4,
       6 / (nu - 4),
       ifelse(nu > 2 & nu <= 4, Inf, NA)
+    )
+  }
+
+  o$initialize <- function(y) {
+    mu <- mean(y)
+    k <- kurtosis(y)
+    nu <- (6 + 4 * k) / k
+    sigma <- variance(y) * (nu - 2) / nu
+    list(
+      mu = mu,
+      sigma = sigma,
+      nu = nu
     )
   }
 

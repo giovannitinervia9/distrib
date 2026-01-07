@@ -1117,3 +1117,101 @@ mc_expected_hessian <- function(distrib, y, theta, nsim = 1000) {
   }
   out
 }
+
+
+
+
+#' Empirical Variance (Population)
+#'
+#' @description
+#' Calculates the empirical variance (second central moment) of a numeric vector.
+#'
+#' @details
+#' Unlike \code{\link[stats]{var}}, which calculates the unbiased sample variance
+#' (dividing by \eqn{n-1}), this function calculates the population variance
+#' (dividing by \eqn{n}).
+#'
+#' The formula used is:
+#' \deqn{s^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2}
+#'
+#' @param x A numeric vector.
+#' @param na.rm Logical. Should missing values be removed before calculation? Defaults to \code{FALSE}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A numeric scalar representing the population variance.
+#' @seealso \code{\link[stats]{var}} for the sample variance.
+#' @export
+variance.default <- function(x, na.rm = FALSE, ...) {
+  if (na.rm) {
+    x <- x[!is.na(x)]
+  }
+  sum((x - mean(x))^2) / NROW(x)
+}
+
+#' Empirical Standard Deviation (Population)
+#'
+#' @description
+#' Calculates the empirical standard deviation of a numeric vector.
+#'
+#' @details
+#' This is calculated as the square root of the population variance:
+#' \deqn{s = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2}}
+#'
+#' Note that this differs from \code{\link[stats]{sd}}, which uses \eqn{n-1} in the denominator.
+#'
+#' @param x A numeric vector.
+#' @param na.rm Logical. Should missing values be removed? Defaults to \code{FALSE}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A numeric scalar representing the population standard deviation.
+#' @export
+std_dev.default <- function(x, na.rm = FALSE, ...) {
+  sqrt(variance(x, na.rm = na.rm))
+}
+
+#' Empirical Skewness
+#'
+#' @description
+#' Calculates the coefficient of skewness (third standardized moment) for a numeric vector.
+#'
+#' @details
+#' Computes the Fisher-Pearson coefficient of skewness:
+#' \deqn{g_1 = \frac{\frac{1}{n} \sum_{i=1}^n (x_i - \bar{x})^3}{ \left( \frac{1}{n} \sum_{i=1}^n (x_i - \bar{x})^2 \right)^{3/2} }}
+#'
+#' @param x A numeric vector.
+#' @param na.rm Logical. Should missing values be removed? Defaults to \code{FALSE}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A numeric scalar. Negative values indicate a left tail, positive values indicate a right tail.
+#' @export
+skewness.default <- function(x, na.rm = FALSE, ...) {
+  if (na.rm) {
+    x <- x[!is.na(x)]
+  }
+  (sum((x - mean(x))^3) / NROW(x)) / ((std_dev(x))^3)
+}
+
+#' Empirical Excess Kurtosis
+#'
+#' @description
+#' Calculates the coefficient of **excess** kurtosis (fourth standardized moment minus 3) for a numeric vector.
+#'
+#' @details
+#' Computes the sample excess kurtosis:
+#' \deqn{g_2 = \frac{\frac{1}{n} \sum_{i=1}^n (x_i - \bar{x})^4}{ \left( \frac{1}{n} \sum_{i=1}^n (x_i - \bar{x})^2 \right)^2 } - 3}
+#'
+#' A value of 0 implies the distribution has the same "tailedness" as a Normal distribution.
+#' Positive values indicate heavier tails (leptokurtic), negative values indicate lighter tails (platykurtic).
+#'
+#' @param x A numeric vector.
+#' @param na.rm Logical. Should missing values be removed? Defaults to \code{FALSE}.
+#' @param ... Additional arguments (not used).
+#'
+#' @return A numeric scalar representing the excess kurtosis.
+#' @export
+kurtosis.default <- function(x, na.rm = FALSE, ...) {
+  if (na.rm) {
+    x <- x[!is.na(x)]
+  }
+  (sum((x - mean(x))^4) / NROW(x)) / ((std_dev(x))^4) - 3
+}

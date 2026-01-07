@@ -177,5 +177,9 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
     (1 - 6 * mu * (1 - mu)) / (mu * (1 - mu))
   }
 
+  o$initialize <- function(y) {
+    list(mu = mean(y))
+  }
+
   o
 }
