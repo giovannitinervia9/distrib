@@ -129,7 +129,7 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
     distrib:::cdf.distrib(o, q, theta, lower.tail, log.p)
   }
 
-  o$quantile <- function(p, theta, lower.tail = FALSE, log.p = FALSE) {
+  o$quantile <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
     distrib:::quantile.distrib(o, p, theta, lower.tail, log.p)
   }
 
