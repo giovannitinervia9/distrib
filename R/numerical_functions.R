@@ -531,7 +531,7 @@ kurtosis.distrib <- function(x, theta, use_moment = FALSE, ...) {
       mu = mean.distrib(x, theta, use_moment)
     )
     s <- std_dev.distrib(x, theta, use_moment)
-    res <- m4 / s^4
+    res <- m4 / s^4 - 3
   } else {
     res <- x$kurtosis(theta)
     if (is.null(res)) {
@@ -543,10 +543,10 @@ kurtosis.distrib <- function(x, theta, use_moment = FALSE, ...) {
         mu = mean.distrib(x, theta, use_moment)
       )
       s <- std_dev.distrib(x, theta, use_moment)
-      res <- m4 / s^4
+      res <- m4 / s^4 - 3
     }
   }
-  res - 3
+  res
 }
 
 

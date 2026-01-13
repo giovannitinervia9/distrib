@@ -230,5 +230,25 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
     3 * (besselK(sqrt_nu, 3) * besselK(sqrt_nu, 1)) / (besselK(sqrt_nu, 2)^2) - 3
   }
 
+  o$initialize <- function(y) {
+    mu <- mean(y)
+    K <- kurtosis(y)
+    fn <- function(nu) {
+      sqrt_nu <- sqrt(nu)
+      3 * (besselK(sqrt_nu, 3) * besselK(sqrt_nu, 1)) / (besselK(sqrt_nu, 2)^2) - 3 - K
+    }
+    nu <- tryCatch(uniroot(fn, c(1e-10, 100), extendInt = "yes")$root,
+      error = function(e) {
+        student_t_distrib()$initialize(y)$nu
+      }
+    )
+    sqrt_nu <- sqrt(nu)
+    list(
+      mu = mu,
+      sigma2 = (var(y) / sqrt_nu) * (besselK(sqrt_nu, 1) / besselK(sqrt_nu, 2)),
+      nu = nu
+    )
+  }
+
   o
 }

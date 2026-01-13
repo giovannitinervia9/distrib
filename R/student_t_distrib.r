@@ -273,7 +273,7 @@ student_t_distrib <- function(
   o$initialize <- function(y) {
     mu <- mean(y)
     k <- kurtosis(y)
-    nu <- (6 + 4 * k) / k
+    nu <- abs((6 + 4 * k) / k)
     sigma <- variance(y) * (nu - 2) / nu
     list(
       mu = mu,
