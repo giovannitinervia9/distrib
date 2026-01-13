@@ -227,7 +227,7 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
 
   o$kurtosis <- function(theta) {
     sqrt_nu <- sqrt(theta[[3]])
-    3 * (besselK(sqrt_nu, 3) * besselK(sqrt_nu, 1)) / (besselK(sqrt_nu, 2)^2)
+    3 * (besselK(sqrt_nu, 3) * besselK(sqrt_nu, 1)) / (besselK(sqrt_nu, 2)^2) - 3
   }
 
   o

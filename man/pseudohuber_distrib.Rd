@@ -17,7 +17,7 @@ Defaults to \code{\link[linkfunctions]{identity_link}}.}
 \item{link_sigma}{A link function object for the scale parameter \eqn{\sigma}.
 Defaults to \code{\link[linkfunctions]{log_link}} to ensure positivity.}
 
-\item{link_nu}{A link function object for the shape parameter \eqn{\nu} (smoothing parameter).
+\item{link_nu}{A link function object for the shape parameter \eqn{\nu}.
 Defaults to \code{\link[linkfunctions]{log_link}} to ensure positivity.}
 }
 \value{

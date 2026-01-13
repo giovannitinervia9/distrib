@@ -546,7 +546,7 @@ kurtosis.distrib <- function(x, theta, use_moment = FALSE, ...) {
       res <- m4 / s^4
     }
   }
-  res
+  res - 3
 }
 
 

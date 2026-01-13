@@ -190,5 +190,9 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
     (1 - 6 * mu * (1 - mu)) / (o$size * mu * (1 - mu))
   }
 
+  o$initialize <- function(y) {
+    list(mu = mean(y))
+  }
+
   o
 }

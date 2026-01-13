@@ -207,6 +207,13 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     0
   }
 
+  o$initialize <- function(y) {
+    list(
+      mu = mean(y),
+      sigma = sd(y)
+    )
+  }
+
   o
 }
 
@@ -403,6 +410,13 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     0
   }
 
+  o$initialize <- function(y) {
+    list(
+      mu = mean(y),
+      sigma = var(y)
+    )
+  }
+
   o
 }
 
@@ -458,7 +472,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 #' @return A list of class \code{"distrib"} containing the components for the Gaussian distribution (precision parameterization).
 #'
 #' @importFrom linkfunctions identity_link log_link
-#' @importFrom stats dnorm pnorm qnorm rnorm
+#' @importFrom stats dnorm pnorm qnorm rnorm var sd
 #' @export
 gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) {
   o <- list()
@@ -596,6 +610,13 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
 
   o$kurtosis <- function(theta) {
     0
+  }
+
+  o$initialize <- function(y) {
+    list(
+      mu = mean(y),
+      sigma = 1 / var(y)
+    )
   }
 
   o

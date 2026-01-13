@@ -267,5 +267,13 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
     (6 * (term1 + term2) / denom) - 3
   }
 
+  o$initialize <- function(y) {
+    mu <- mean(y)
+    list(
+      mu = mu,
+      phi = mu * (1 - mu) / var(y) - 1
+    )
+  }
+
   o
 }

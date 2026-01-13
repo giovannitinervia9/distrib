@@ -151,11 +151,11 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
     g <- list()
 
     if ("mu" %in% par) {
-      g$mu <- (-2*mu*digamma_mu2_sigma2 + 2*mu*log_mu_sigma2 + mu + 2*mu*log_y - y)/sigma2
+      g$mu <- (-2 * mu * digamma_mu2_sigma2 + 2 * mu * log_mu_sigma2 + mu + 2 * mu * log_y - y) / sigma2
     }
 
-    if("sigma2" %in% par) {
-      g$sigma2 <- -(mu*(-mu*digamma_mu2_sigma2 + mu + mu*(log_mu_sigma2 + log_y) - y))/(sigma2*sigma2)
+    if ("sigma2" %in% par) {
+      g$sigma2 <- -(mu * (-mu * digamma_mu2_sigma2 + mu + mu * (log_mu_sigma2 + log_y) - y)) / (sigma2 * sigma2)
     }
 
     g
@@ -239,6 +239,13 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
 
   o$median <- function(theta) {
     o$quantile(.5, theta)
+  }
+
+  o$initialize <- function(y) {
+    list(
+      mu = mean(y),
+      sigma2 = var(y)
+    )
   }
 
   o

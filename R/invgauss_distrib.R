@@ -148,11 +148,11 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
     g <- list()
 
     if ("mu" %in% par) {
-      g$mu <- res/(phi*mu2*mu)
+      g$mu <- res / (phi * mu2 * mu)
     }
 
     if ("phi" %in% par) {
-      g$phi <- (res^2 - y*mu2*phi) / (2*y*phi*phi*mu2)
+      g$phi <- (res^2 - y * mu2 * phi) / (2 * y * phi * phi * mu2)
     }
     g
   }
@@ -226,6 +226,14 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
 
   o$median <- function(theta) {
     o$quantile(.5, theta)
+  }
+
+  o$initialize <- function(y) {
+    mu <- mean(y)
+    list(
+      mu = mu,
+      phi = var(y) / mu^3
+    )
   }
 
   o

@@ -175,5 +175,9 @@ poisson_distrib <- function(link_mu = log_link()) {
     1 / theta[[1]]
   }
 
+  o$initialize <- function(y) {
+    list(mu = mean(y))
+  }
+
   o
 }

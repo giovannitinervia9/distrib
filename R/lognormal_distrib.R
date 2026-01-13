@@ -135,11 +135,11 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     g <- list()
 
     if ("mu" %in% par) {
-      g$mu <- (log_y - mu)/sigma2
+      g$mu <- (log_y - mu) / sigma2
     }
 
     if ("sigma2" %in% par) {
-      g$sigma2 <- ((log_y - mu)^2 - sigma2)/(2*sigma2^2)
+      g$sigma2 <- ((log_y - mu)^2 - sigma2) / (2 * sigma2^2)
     }
     g
   }
@@ -213,6 +213,14 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 
   o$median <- function(theta) {
     exp(theta[[1]])
+  }
+
+  o$initialize <- function(y) {
+    log_y <- log(y)
+    list(
+      mu = mean(log_y),
+      sigma2 = var(log_y)
+    )
   }
 
   o

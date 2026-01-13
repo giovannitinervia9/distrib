@@ -99,11 +99,11 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
     g <- list()
 
     if ("mu" %in% par) {
-      g$mu <- th_frac_th_plus_mu*(y/mu - 1)
+      g$mu <- th_frac_th_plus_mu * (y / mu - 1)
     }
 
     if ("theta" %in% par) {
-      g$theta <- -digamma(theta) + digamma(y_plus_theta) + log(th_frac_th_plus_mu) - (y - mu)/(th_plus_mu)
+      g$theta <- -digamma(theta) + digamma(y_plus_theta) + log(th_frac_th_plus_mu) - (y - mu) / (th_plus_mu)
     }
     g
   }
@@ -195,6 +195,14 @@ negbin_distrib <- function(link_mu = log_link(), link_theta = log_link()) {
     mu <- theta[[1]]
     th <- theta[[2]]
     ifelse(th > 1, floor(mu * (th - 1) / th), 0)
+  }
+
+  o$initialize <- function(y) {
+    mu <- mean(y)
+    list(
+      mu = mu,
+      theta = mu^2 / (var(y) - mu)
+    )
   }
 
   o
