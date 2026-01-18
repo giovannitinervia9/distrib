@@ -885,38 +885,79 @@ quantile.distrib <- function(x, p, theta, lower.tail = TRUE, log.p = FALSE, ...)
 
 
 
-#' Generic Random Number Generator using Inverse Transform Sampling
+#' Generic Random Number Generator
 #'
 #' @description
-#' Generates random samples for a distribution object using the Inverse Transform Sampling method.
-#' This function acts as a generic fallback for distribution objects that do not have a specialized
-#' \code{rng} method implemented.
+#' Generates random samples for a distribution object. This function acts as a generic dispatcher:
+#' \itemize{
+#'   \item For \strong{discrete} distributions, it uses \strong{Inverse Transform Sampling} via the object's \code{quantile} function.
+#'   \item For \strong{continuous} distributions, it delegates to the \strong{Generalized Ratio-of-Uniforms (GRoU)} method
+#'   via \code{\link{rng_continuous_grou}}.
+#' }
 #'
-#' @param x A distribution object of class \code{"distrib"}.
-#'   Must contain a valid \code{quantile} function component.
+#' @param x A distribution object of class \code{distrib}.
 #' @param n Integer. The number of observations to be generated.
-#' @param theta A list containing the parameters of the distribution,
-#'   passed to the object's \code{quantile} function.
-#' @param ... Additional arguments (currently ignored).
+#'   \strong{Constraint:} If \code{theta} contains vectorized parameters (lengths > 1),
+#'   \code{n} must strictly match the length of the expanded parameter vectors.
+#' @param theta A list containing the parameters of the distribution.
+#'   \itemize{
+#'     \item \strong{Scalar:} All parameters have length 1.
+#'     \item \strong{Vectorized:} Parameters can be vectors of length \code{n} or length 1 (which are recycled to length \code{n}).
+#'   }
+#' @param ... Additional arguments passed to the underlying generation method
+#'   (e.g., tuning parameter \code{r} for \code{rng_continuous_grou}).
 #'
 #' @details
-#' This function generates \code{n} uniform random numbers \eqn{u \sim U(0, 1)} using
-#' \code{\link[stats]{runif}} and transforms them into the target distribution using the
-#' object's quantile function:
-#' \deqn{X = Q(u; \theta)}
-#' where \eqn{Q} is the quantile function of the distribution defined in \code{x}.
+#' \strong{Vectorization and Consistency Strategy:}
 #'
-#' While mathematically exact, this method relies on the numerical accuracy of the
-#' \code{quantile} implementation and is generally slower than specialized generation algorithms
-#' if they exist.
+#' \itemize{
+#'   \item \strong{i.i.d. Sampling (Scalar Parameters):} If all components of \code{theta} have length 1,
+#'   the function generates \code{n} independent and identically distributed samples from the same distribution.
+#'
+#'   \item \strong{Pointwise Sampling (Vector Parameters):} If any component of \code{theta} has length > 1:
+#'   \enumerate{
+#'     \item The parameters are expanded and recycled to a common length (using standard R recycling rules).
+#'     \item \strong{Consistency Check:} The function strictly verifies that the length of the expanded parameters
+#'     equals \code{n}. If they do not match, an error is raised to prevent ambiguity.
+#'     \item The function generates \strong{one} observation for each set of parameters (i.e., \eqn{y_i \sim D(\theta_i)}).
+#'   }
+#' }
 #'
 #' @return A numeric vector of length \code{n} containing the generated random deviates.
 #'
 #' @importFrom stats runif
+#' @seealso \code{\link{rng_continuous_grou}}
 #'
 #' @export
 rng.distrib <- function(x, n, theta, ...) {
-  x$quantile(runif(n), theta)
+  param_lens <- lengths(theta)
+
+  if (!all(param_lens %in% c(1, n))) {
+    dims_str <- paste(names(param_lens), param_lens, sep = ": ", collapse = ", ")
+    stop(
+      sprintf(
+        "Parameter dimension mismatch: 'n' is %d, but parameters have dimensions [%s]. All parameters must have length 1 or %d.",
+        n, dims_str, n
+      )
+    )
+  }
+
+
+  if (x$type == "discrete") {
+    x$quantile(runif(n), theta)
+  } else if (x$type == "continuous") {
+    if (any(lengths(theta) > 1)) {
+      theta <- transpose_params(expand_params(theta))
+      sapply(
+        theta,
+        \(theta) {
+          rng_continuous_grou(1, x, theta, ...)
+        }
+      )
+    } else {
+      rng_continuous_grou(n, x, theta, ...)
+    }
+  }
 }
 
 
@@ -1519,4 +1560,185 @@ mode.distrib <- function(x, theta, maxit = 10000, tol = 1e-10) {
       }
     )
   }
+}
+
+
+
+
+#' Generalized Ratio-of-Uniforms (GRoU) Random Number Generator
+#'
+#' @description
+#' Generates random variates from a continuous distribution object using the Generalized
+#' Ratio-of-Uniforms (GRoU) method.
+#'
+#' This function is a generic sampler that does not require the inverse CDF. Instead, it relies on
+#' the kernel of the probability density function and the mode of the distribution. It automatically
+#' constructs the bounding rectangle for the acceptance-rejection method.
+#'
+#' @param n Integer. The number of random variates to generate.
+#' @param x An object of class \code{"distrib"}.
+#'   Must contain the following components: \code{kernel}, \code{mode}, \code{variance}, and \code{bounds}.
+#' @param theta A named list of parameters for the distribution.
+#' @param r Numeric. The tuning parameter for the transformation power. Defaults to 2.
+#'   Common choices are:
+#'   \itemize{
+#'     \item \code{r = 1}: Standard Ratio-of-Uniforms.
+#'     \item \code{r = 2}: Often more efficient for heavy-tailed distributions.
+#'   }
+#'
+#' @details
+#' \strong{The GRoU Method:}
+#'
+#' The Generalized Ratio-of-Uniforms method generates random variables \eqn{Y} with density proportional
+#' to a kernel \eqn{K(y)} by simulating a point \eqn{(U, V)} uniformly over the region:
+#' \deqn{A_r = \left\{ (u, v) : 0 < u \leq \left[ K\left( \frac{v}{u^r} \right) \right]^{\frac{1}{r+1}} \right\}}
+#'
+#' If \eqn{(U, V)} is uniformly distributed over \eqn{A_r}, then \eqn{Y = V / U^r} has the desired distribution.
+#'
+#' \strong{Algorithm Steps:}
+#'
+#' \enumerate{
+#'   \item \strong{Bounding Rectangle Construction:} The algorithm first determines the bounding box
+#'   \eqn{[0, u_{\max}] \times [v_{\min}, v_{\max}]} enclosing \eqn{A_r}.
+#'   \itemize{
+#'      \item \eqn{u_{\max} = \sup_y K(y)^{\frac{1}{r+1}}}. Calculated at the distribution's mode.
+#'      \item \eqn{v_{\min} = \inf_y h(y)} and \eqn{v_{\max} = \sup_y h(y)}, where the auxiliary function is
+#'      \eqn{h(y) = y \cdot K(y)^{\frac{r}{r+1}}}.
+#'   }
+#'   \item \strong{Heuristic Optimization:} To find \eqn{v_{\min}} and \eqn{v_{\max}}, the function performs
+#'   a dynamic search starting from the mode and expanding outwards using the standard deviation (derived from
+#'   \code{x$variance}) as a step size, until the function value decreases sufficiently. This defines the search
+#'   interval for the \code{\link[stats]{optimize}} function.
+#'   \item \strong{Sampling Loop:}
+#'   \itemize{
+#'      \item Generate \eqn{U \sim \text{Unif}(0, u_{\max})} and \eqn{V \sim \text{Unif}(v_{\min}, v_{\max})}.
+#'      \item Compute candidate \eqn{Y = V / U^r}.
+#'      \item Accept \eqn{Y} if \eqn{(r+1) \log(U) \leq \log K(Y)}.
+#'   }
+#' }
+#'
+#' \strong{Robustness:}
+#' The function includes safeguards against infinite loops (max 10 consecutive failures in batch sampling)
+#' and checks for NaN/NA values during the initialization of bounds.
+#'
+#' @return A numeric vector of length \code{n} containing the generated random variates.
+#'
+#' @importFrom stats runif optimize
+#' @export
+rng_continuous_grou <- function(n, x, theta, r = 2) {
+  obj_fun <- function(t) {
+    if (t < lb || t > ub) {
+      return(0)
+    }
+    val <- t * x$kernel(t, theta, log = FALSE)^r_ratio
+    if (is.na(val)) 0 else val
+  }
+  lb <- x$bounds[1]
+  ub <- x$bounds[2]
+  mode_val <- x$mode(theta)
+  r_ratio <- r / (r + 1)
+  u_max <- x$kernel(mode_val, theta, log = FALSE)^(1 / (r + 1))
+
+  if (is.nan(u_max) | is.na(u_max)) {
+    stop("NaN or NA value in u_max: the log-kernel is possibly not bounded")
+  }
+
+  found_lower <- FALSE
+  delta <- tryCatch(sqrt(x$variance(theta)), error = function(e) 1)
+  if (is.nan(delta) || !is.numeric(delta)) {
+    delta <- 1
+  }
+  current_t <- mode_val
+  f_curr <- obj_fun(current_t)
+
+  while (!found_lower) {
+    new_t <- max(lb, current_t - delta)
+    f_new <- obj_fun(new_t)
+    if (f_new < f_curr) {
+      delta <- delta * 2
+      f_curr <- f_new
+      current_t <- new_t
+      if (new_t <= lb) {
+        found_lower <- TRUE
+        search_limit_left <- lb
+      }
+    } else {
+      search_limit_left <- new_t
+      found_lower <- TRUE
+    }
+  }
+
+  found_upper <- FALSE
+  delta <- tryCatch(sqrt(x$variance(theta)), error = function(e) 1)
+  if (is.nan(delta) || !is.numeric(delta)) {
+    delta <- 1
+  }
+  current_t <- mode_val
+  f_curr <- obj_fun(current_t)
+
+  while (!found_upper) {
+    new_t <- min(ub, current_t + delta)
+    f_new <- obj_fun(new_t)
+    if (f_new > f_curr) {
+      delta <- delta * 2
+      f_curr <- f_new
+      current_t <- new_t
+      if (new_t >= ub) {
+        found_upper <- TRUE
+        search_limit_right <- ub
+      }
+    } else {
+      search_limit_right <- new_t
+      found_upper <- TRUE
+    }
+  }
+
+  v_min <- optimize(obj_fun, lower = search_limit_left, upper = search_limit_right, maximum = FALSE)$objective
+  v_max <- optimize(obj_fun, lower = search_limit_left, upper = search_limit_right, maximum = TRUE)$objective
+
+
+  sampled <- numeric(n)
+  n_accepted <- 0
+  failed <- 0
+
+  while (n_accepted < n) {
+    needed <- n - n_accepted
+    batch_size <- max(10, ceiling(needed * 1.5))
+
+    u <- runif(batch_size, 0, u_max)
+    v <- runif(batch_size, v_min, v_max)
+    y_cand <- v / (u^r)
+
+    valid_range <- (y_cand >= lb & y_cand <= ub)
+    if (sum(valid_range) <= 0) {
+      failed <- failed + 1
+      if (failed >= 10) {
+        stop("Could not sample in 10 tentatives")
+      }
+      next
+    } else {
+      failed <- 0
+      y_cand <- y_cand[valid_range]
+      u <- u[valid_range]
+      keep <- ((r + 1) * log(u) <= x$kernel(y_cand, theta, log = TRUE))
+
+      new_values <- y_cand[keep]
+      n_found <- length(new_values)
+
+      if (n_found > 0) {
+        failed <- 0
+        take <- min(n_found, needed)
+        idx_start <- n_accepted + 1
+        idx_end <- n_accepted + take
+        sampled[idx_start:idx_end] <- new_values[1:take]
+        n_accepted <- n_accepted + take
+      } else {
+        failed <- failed + 1
+        if (failed >= 10) {
+          stop("Could not sample in 10 tentatives")
+        }
+      }
+    }
+  }
+  sampled
 }

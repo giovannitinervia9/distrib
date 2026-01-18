@@ -2,37 +2,53 @@
 % Please edit documentation in R/numerical_functions.R
 \name{rng.distrib}
 \alias{rng.distrib}
-\title{Generic Random Number Generator using Inverse Transform Sampling}
+\title{Generic Random Number Generator}
 \usage{
 \method{rng}{distrib}(x, n, theta, ...)
 }
 \arguments{
-\item{x}{A distribution object of class \code{"distrib"}.
-Must contain a valid \code{quantile} function component.}
+\item{x}{A distribution object of class \code{distrib}.}
 
-\item{n}{Integer. The number of observations to be generated.}
+\item{n}{Integer. The number of observations to be generated.
+\strong{Constraint:} If \code{theta} contains vectorized parameters (lengths > 1),
+\code{n} must strictly match the length of the expanded parameter vectors.}
 
-\item{theta}{A list containing the parameters of the distribution,
-passed to the object's \code{quantile} function.}
+\item{theta}{A list containing the parameters of the distribution.
+\itemize{
+\item \strong{Scalar:} All parameters have length 1.
+\item \strong{Vectorized:} Parameters can be vectors of length \code{n} or length 1 (which are recycled to length \code{n}).
+}}
 
-\item{...}{Additional arguments (currently ignored).}
+\item{...}{Additional arguments passed to the underlying generation method
+(e.g., tuning parameter \code{r} for \code{rng_continuous_grou}).}
 }
 \value{
 A numeric vector of length \code{n} containing the generated random deviates.
 }
 \description{
-Generates random samples for a distribution object using the Inverse Transform Sampling method.
-This function acts as a generic fallback for distribution objects that do not have a specialized
-\code{rng} method implemented.
+Generates random samples for a distribution object. This function acts as a generic dispatcher:
+\itemize{
+\item For \strong{discrete} distributions, it uses \strong{Inverse Transform Sampling} via the object's \code{quantile} function.
+\item For \strong{continuous} distributions, it delegates to the \strong{Generalized Ratio-of-Uniforms (GRoU)} method
+via \code{\link{rng_continuous_grou}}.
+}
 }
 \details{
-This function generates \code{n} uniform random numbers \eqn{u \sim U(0, 1)} using
-\code{\link[stats]{runif}} and transforms them into the target distribution using the
-object's quantile function:
-\deqn{X = Q(u; \theta)}
-where \eqn{Q} is the quantile function of the distribution defined in \code{x}.
+\strong{Vectorization and Consistency Strategy:}
 
-While mathematically exact, this method relies on the numerical accuracy of the
-\code{quantile} implementation and is generally slower than specialized generation algorithms
-if they exist.
+\itemize{
+\item \strong{i.i.d. Sampling (Scalar Parameters):} If all components of \code{theta} have length 1,
+the function generates \code{n} independent and identically distributed samples from the same distribution.
+
+\item \strong{Pointwise Sampling (Vector Parameters):} If any component of \code{theta} has length > 1:
+\enumerate{
+\item The parameters are expanded and recycled to a common length (using standard R recycling rules).
+\item \strong{Consistency Check:} The function strictly verifies that the length of the expanded parameters
+equals \code{n}. If they do not match, an error is raised to prevent ambiguity.
+\item The function generates \strong{one} observation for each set of parameters (i.e., \eqn{y_i \sim D(\theta_i)}).
+}
+}
+}
+\seealso{
+\code{\link{rng_continuous_grou}}
 }
