@@ -1215,3 +1215,308 @@ kurtosis.default <- function(x, na.rm = FALSE, ...) {
   }
   (sum((x - mean(x))^4) / NROW(x)) / ((std_dev(x))^4) - 3
 }
+
+
+
+
+
+#' Numerical Mode Finding for `distrib` Objects
+#'
+#' Calculates the mode (the value \eqn{y} that maximizes the probability density or mass function)
+#' for a given distribution object. The function is generic, robust, and does not require
+#' analytical derivatives or prior knowledge of the distribution's moments (e.g., mean).
+#'
+#' @description
+#' This function employs a two-stage numerical optimization strategy to find the global maximum
+#' of the distribution's kernel. It automatically detects the distribution type (continuous or discrete)
+#' and applies the appropriate algorithm:
+#' * **Continuous:** Exponential Search for bracketing followed by Brent's Method.
+#' * **Discrete:** Exponential Search for bracketing followed by Integer Binary Search.
+#'
+#' @param x An object of class \code{"distrib"} containing the distribution definition
+#'   (kernel, bounds, type, etc.).
+#' @param theta A named list of parameters for the distribution. Vectors are supported for batch calculation;
+#'   the function automatically expands and transposes parameters to handle multiple combinations.
+#' @param maxit Integer. The maximum number of iterations allowed for the "hunting" phase
+#'   (Exponential Search) to bracket the peak. Defaults to 10000.
+#' @param tol Numeric. The convergence tolerance for the refinement phase (used only for
+#'   continuous distributions). Defaults to \code{1e-10}.
+#'
+#' @details
+#' **Algorithm Strategy:**
+#' Since the distribution shape is treated as a "black box" (unimodal but potentially skewed or heavy-tailed),
+#' standard gradient methods are avoided in favor of direct search methods that are robust to flat regions
+#' and numerical noise.
+#'
+#' \strong{Continuous Distributions:}
+#' \enumerate{
+#'   \item \emph{Initialization:} Determines a safe starting point based on bounds.
+#'   \item \emph{Gradient Check:} Probes the local density to determine the uphill direction.
+#'   \item \emph{Exponential Search (The Hunt):} Steps away from the start point with exponentially increasing
+#'     step sizes (\eqn{1, 2, 4, \dots}) until the density begins to drop. This guarantees bracketing the mode
+#'     in \eqn{O(\log N)} steps, where \eqn{N} is the distance from the start.
+#'   \item \emph{Refinement (The Zoom):} Uses Brent's Method (via \code{\link[stats]{optimize}}) within the
+#'     found bracket to pinpoint the mode with precision \code{tol}.
+#' }
+#'
+#' \strong{Discrete Distributions:}
+#' \enumerate{
+#'   \item \emph{Bracketing:} Similar to the continuous case, uses Exponential Search to find an integer interval
+#'     containing the peak.
+#'   \item \emph{Integer Binary Search:} Performs a binary search on the discrete domain. This reduces the search
+#'     space logarithmically.
+#'   \item \emph{Tie-Breaking:} In cases of bimodality (e.g., Poisson with integer \eqn{\lambda} where \eqn{P(k) = P(k-1)}),
+#'     the algorithm adopts a "Greedy Right" approach, returning the larger integer (consistent with \code{floor} behavior
+#'     for standard parameters).
+#' }
+#'
+#' **Complexity:**
+#' For both cases, if the mode is located at distance \eqn{N} from the origin (or lower bound), the time complexity is
+#' \eqn{O(\log N)} in terms of kernel evaluations. This makes the function extremely efficient even for
+#' distributions centered far from the origin (e.g., \eqn{\mu = 10^6}).
+#'
+#' @return A numeric vector containing the calculated mode(s). The length corresponds to the number of
+#' parameter sets provided in `theta`.
+#'
+#' @importFrom stats optimize
+#' @export
+mode.distrib <- function(x, theta, maxit = 10000, tol = 1e-10) {
+  mode_continuous <- function(x, theta, maxit = 10000, tol = 1e-10) {
+    lb <- x$bounds[1]
+    ub <- x$bounds[2]
+
+    # Wrapper for the kernel function handling bounds and numerical stability
+    obj_fun <- function(t) {
+      if (t <= lb || t >= ub) {
+        return(-Inf)
+      }
+      val <- x$kernel(t, theta, log = TRUE)
+      if (is.na(val) || is.nan(val)) {
+        return(-Inf)
+      }
+      val
+    }
+
+    # CASE A: Finite Bounds
+    # If both bounds are finite, we can skip the hunt and use optimize directly
+    if (is.finite(lb) && is.finite(ub)) {
+      optimize(obj_fun, interval = c(lb, ub), maximum = TRUE, tol = tol)$maximum
+    }
+
+    # CASE B: Infinite Bounds (requires bracketing)
+
+    # 1. Determine a safe starting point
+    current_x <- 0
+    if (is.finite(lb)) {
+      current_x <- lb + 1 # Start slightly inside lower bound
+    } else if (is.finite(ub)) {
+      current_x <- ub - 1 # Start slightly inside upper bound
+    }
+
+    # 2. Determine initial direction (Local Gradient)
+    f_curr <- obj_fun(current_x)
+    step <- 1
+
+    # Probe slightly to the right to see if density increases or decreases
+    f_right <- obj_fun(current_x + 1e-04)
+
+    if (f_right > f_curr) {
+      direction <- 1 # Mode is likely to the right
+    } else {
+      direction <- -1 # Mode is likely to the left
+    }
+
+    # 3. Exponential Search (The Hunt)
+    # Expand step size exponentially until the density value drops.
+    # This brackets the mode between the previous point and the current point.
+
+    prev_x <- current_x
+    iter <- 0
+
+    while (iter < maxit) {
+      next_x <- current_x + (direction * step)
+
+      # Check physical bounds (if one side is finite)
+      if (next_x <= lb || next_x >= ub) {
+        # If we hit a boundary, truncate search there and use it for optimization
+        next_x <- if (direction == 1) min(next_x, ub) else max(next_x, lb)
+        break
+      }
+
+      f_next <- obj_fun(next_x)
+
+      # STOP CONDITION: Did we cross the peak?
+      if (f_next < f_curr) {
+        # Yes, the value dropped. The mode is trapped between prev_x and next_x.
+        break
+      }
+
+      # If not, prepare for the next step
+      step <- step * 2 # Double the step size (Exponential Search)
+      prev_x <- current_x # Save the last valid "uphill" point
+      current_x <- next_x
+      f_curr <- f_next
+      iter <- iter + 1
+    }
+
+    # 4. Refinement (Brent's Method)
+    # We now have the mode bracketed in [min(prev, next), max(prev, next)]
+    search_range <- sort(c(prev_x, next_x)) + c(-1e-03, 1e-03)
+
+    # Correct for any potential bound oversteps (safety check)
+    search_range[1] <- max(search_range[1], lb)
+    search_range[2] <- min(search_range[2], ub)
+
+    res <- optimize(obj_fun, interval = search_range, maximum = TRUE, tol = tol)
+    res$maximum
+  }
+
+  mode_discrete <- function(x, theta, maxit = 10000) {
+    # Bounds: ensure they are integers (e.g., Poisson starts at 0, not 0.5)
+    lb <- ceiling(x$bounds[1])
+    ub <- floor(x$bounds[2])
+
+    # Wrapper for the kernel that handles integers, bounds, and numerical stability
+    obj_fun <- function(k) {
+      k <- round(k) # Enforce integer evaluation
+
+      # Check physical bounds
+      if (k < lb || k > ub) {
+        return(-Inf)
+      }
+      val <- x$kernel(k, theta, log = TRUE)
+      # Handle numerical errors (NA/NaN) by treating them as probability 0 (-Inf log)
+      if (is.na(val) || is.nan(val)) {
+        return(-Inf)
+      }
+      val
+    }
+
+    # --- 1. Determine Safe Starting Point ---
+    # Default to 0, but respect bounds if they exist
+    current_k <- 0
+
+    if (is.finite(lb)) {
+      current_k <- lb
+    }
+    # If lower bound is infinite but upper is finite, start at upper bound
+    if (!is.finite(lb) && is.finite(ub)) {
+      current_k <- ub
+    }
+
+    # Sanity Check: Ensure the starting point gives a valid density.
+    # If it returns -Inf (e.g., due to edge cases), try to nudge it valid.
+    if (obj_fun(current_k) == -Inf) {
+      # Fallback: move slightly inside the domain if possible
+      if (is.finite(lb)) {
+        current_k <- lb + 1
+      }
+    }
+
+    # --- 2. Determine Initial Direction (Gradient) ---
+    val_curr <- obj_fun(current_k)
+    val_right <- obj_fun(current_k + 1)
+
+    direction <- 0
+
+    if (val_right > val_curr) {
+      direction <- 1 # Slope is positive, mode is to the right
+    } else {
+      # If slope is not positive to the right, check the left to be sure
+      val_left <- obj_fun(current_k - 1)
+
+      if (val_left > val_curr) {
+        direction <- -1 # Slope is negative, mode is to the left
+      } else {
+        # If current is >= both left and right, we are already at the mode!
+        return(current_k)
+      }
+    }
+
+    # --- 3. Exponential Search (The Hunt) ---
+    # Rapidly expand the search interval until we bracket the peak.
+    step <- 1
+    prev_k <- current_k
+    iter <- 0
+
+    found_bracket <- FALSE
+    limit_hit <- FALSE
+
+    while (iter < maxit) {
+      next_k <- current_k + (direction * step)
+
+      # Check hard bounds during the hunt
+      if (next_k < lb) {
+        next_k <- lb
+        limit_hit <- TRUE
+      }
+      if (next_k > ub) {
+        next_k <- ub
+        limit_hit <- TRUE
+      }
+
+      val_next <- obj_fun(next_k)
+
+      # STOP CONDITION: If the value drops, we have crossed the peak.
+      if (val_next < val_curr) {
+        found_bracket <- TRUE
+        break
+      }
+
+      if (limit_hit) {
+        break # We hit the edge of the domain and are still climbing
+      }
+
+      # Update for the next step (Double the step size for exponential reach)
+      step <- step * 2
+      prev_k <- current_k
+      current_k <- next_k
+      val_curr <- val_next
+      iter <- iter + 1
+    }
+
+    # Define the final search bracket
+    # The peak is strictly contained between prev_k and next_k
+    search_low <- min(prev_k, next_k)
+    search_high <- max(prev_k, next_k)
+
+    # --- 4. Integer Binary Search (The Zoom) ---
+    # Since the function is discrete and unimodal, we use binary search
+    # to find the maximum in O(log N) time.
+
+    while (search_low < search_high) {
+      # Calculate integer midpoint
+      mid <- floor((search_low + search_high) / 2)
+
+      val_mid <- obj_fun(mid)
+      val_mid_plus_1 <- obj_fun(mid + 1)
+
+      if (val_mid_plus_1 >= val_mid - 1e-9) {
+        # Slope is positive at 'mid', so the peak is to the right
+        search_low <- mid + 1
+      } else {
+        # Slope is negative or flat, so the peak is at 'mid' or to the left
+        search_high <- mid
+      }
+    }
+
+    search_low
+  }
+
+
+  if (x$type == "continuous") {
+    sapply(
+      transpose_params(expand_params(theta)),
+      \(th) {
+        mode_continuous(x, theta, maxit, tol)
+      }
+    )
+  } else if (x$type == "discrete") {
+    sapply(
+      transpose_params(expand_params(theta)),
+      \(th) {
+        mode_discrete(x, theta, maxit)
+      }
+    )
+  }
+}

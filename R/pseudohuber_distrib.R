@@ -70,7 +70,7 @@
 #' Note that the location parameter \eqn{\mu} is orthogonal to the scale parameter \eqn{\sigma} and the shape parameter \eqn{\nu},
 #' since \eqn{\mathbb{E}(r) = \mathbb{E}(r^3) = 0}.
 #' @return A list of class \code{"distrib"} containing the components for the Pseudo-Huber distribution.
-#'
+#' @importFrom stats uniroot
 #' @export
 pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link(), link_nu = log_link()) {
   o <- list()
