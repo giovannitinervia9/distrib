@@ -19,6 +19,6 @@ Creates a transformer object for the reciprocal transformation \eqn{Y = 1/X}.
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = -\dfrac{1}{Y^2}} (Absolute value taken for density: \eqn{1/Y^2})
 
-\strong{Support:} \eqn{X \neq 0}. Typically used for \eqn{X > 0} (Inverse Gamma) or \eqn{X < 0}.
+\strong{Support:} \eqn{X \neq 0}. Typically used for \eqn{X > 0} or \eqn{X < 0}.
 Since the function is strictly decreasing, bounds and quantiles are automatically swapped.
 }

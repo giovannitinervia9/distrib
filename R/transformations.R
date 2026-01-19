@@ -149,7 +149,7 @@ exp_transform <- function() {
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = -\dfrac{1}{Y^2}} (Absolute value taken for density: \eqn{1/Y^2})
 #'
-#' **Support:** \eqn{X \neq 0}. Typically used for \eqn{X > 0} (Inverse Gamma) or \eqn{X < 0}.
+#' **Support:** \eqn{X \neq 0}. Typically used for \eqn{X > 0} or \eqn{X < 0}.
 #' Since the function is strictly decreasing, bounds and quantiles are automatically swapped.
 #'
 #' @return A list of class \code{"transformer"}.
@@ -162,7 +162,7 @@ inverse_transform <- function() {
   o <- list()
   o$name <- "inverse"
   o$valid_support <- function(bounds) {
-    (bounds[1] > 0 || bounds[2] < 0) # Must not include 0
+    TRUE
   }
   o$bounds_fun <- function(bounds) {
     sort(1 / bounds)
