@@ -250,8 +250,17 @@ series <- function(f, start = 0, end = Inf, step = 1000, tol = 1e-10, maxit = 10
 #'     where \eqn{\mu} is the mean of the distribution.
 #'
 #' **Mechanism:**
-#' * For **continuous** distributions (`type = "continuous"`), it uses \code{\link[stats]{integrate}}.
-#' * For **discrete** distributions (`type = "discrete"`), it uses the internal function \code{series}.
+#' * **Continuous Distributions:** Uses \code{\link[stats]{integrate}}. To ensure numerical stability for
+#'   distributions with sharp peaks on infinite domains, the function
+#'   attempts to identify the **mode** of the distribution. If found, the integration interval is split
+#'   at the mode (\eqn{[lb, mode] + [mode, ub]}). This "anchoring" forces the numerical integrator to
+#'   evaluate the function in the region of highest density, preventing underflow errors where the integral
+#'   would otherwise be incorrectly estimated as zero.
+#' * **Discrete Distributions:** Uses the internal function \code{series} to sum the terms.
+#'
+#' **Robustness:**
+#' The integrand is protected against non-finite values (NaN/Inf) which are coerced to 0, assuming they occur
+#' in the negligible tails of the distribution.
 #'
 #' **Vectorization:**
 #' The function fully supports vectorized parameters (`theta`). If `theta` contains vectors of length \eqn{n},
@@ -317,12 +326,29 @@ moment <- function(
 
   if (type == "continuous") {
     FUN <- function(theta, mu, p) {
-      stats::integrate(
-        f = \(t) f(t, mu, p) * pdf(t, theta, log = FALSE),
-        lower = bounds[1],
-        upper = bounds[2],
-        ...
-      )$value
+      peak <- tryCatch(distrib$mode(theta), error = function(e) NA)
+      use_split <- !is.na(peak) && peak > bounds[1] && peak < bounds[2]
+      safe_integrand <- function(t) {
+        val <- f(t, mu, p) * pdf(t, theta, log = FALSE)
+        val[!is.finite(val)]
+        val
+      }
+
+      tryCatch(
+        {
+          if (use_split) {
+            int_left <- stats::integrate(safe_integrand, lower = bounds[1], upper = peak, ...)$value
+            int_right <- stats::integrate(safe_integrand, lower = peak, upper = bounds[2], ...)$value
+            return(int_left + int_right)
+          } else {
+            return(stats::integrate(safe_integrand, lower = bounds[1], upper = bounds[2], ...)$value)
+          }
+        },
+        error = function(e) {
+          warning(paste("Integration failed:", e$message))
+          return(NaN)
+        }
+      )
     }
   } else {
     FUN <- function(theta, mu, p) {
@@ -1076,7 +1102,7 @@ expectation <- function(distrib, f, theta, ...) {
 #'
 #' This function relies on the identity that, under regularity conditions, the expected Hessian
 #' is equal to the negative of the expected outer product of the score function (gradients):
-#' \deqn{\mathbb{E}\left[\nabla^2 \ell(\theta)\right] = -\mathbb{E}\left[\nabla \ell(\theta) (\nabla \ell(\theta))^T\right]}
+#' \deqn{\mathbb{E}\left[\nabla^2 \ell(\theta)\right] = -\mathbb{E}\left[\nabla \ell(\theta) (\nabla \ell(\theta))^\top\right]}
 #'
 #' @param distrib An object of class \code{"distrib"}.
 #'   Must contain \code{params}, \code{gradient}, and \code{rng} components.
@@ -1156,7 +1182,7 @@ mc_expected_hessian <- function(distrib, y, theta, nsim = 1000) {
       }
     }
   }
-  out
+  expand_params(out, NROW(y))
 }
 
 

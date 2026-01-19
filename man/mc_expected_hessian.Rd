@@ -37,7 +37,7 @@ distribution object using Monte Carlo simulation.
 
 This function relies on the identity that, under regularity conditions, the expected Hessian
 is equal to the negative of the expected outer product of the score function (gradients):
-\deqn{\mathbb{E}\left[\nabla^2 \ell(\theta)\right] = -\mathbb{E}\left[\nabla \ell(\theta) (\nabla \ell(\theta))^T\right]}
+\deqn{\mathbb{E}\left[\nabla^2 \ell(\theta)\right] = -\mathbb{E}\left[\nabla \ell(\theta) (\nabla \ell(\theta))^\top\right]}
 }
 \details{
 For each observation \eqn{k} in \code{y}, the function:

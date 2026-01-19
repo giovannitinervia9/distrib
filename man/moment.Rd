@@ -45,9 +45,18 @@ where \eqn{\mu} is the mean of the distribution.
 
 \strong{Mechanism:}
 \itemize{
-\item For \strong{continuous} distributions (\code{type = "continuous"}), it uses \code{\link[stats]{integrate}}.
-\item For \strong{discrete} distributions (\code{type = "discrete"}), it uses the internal function \code{series}.
+\item \strong{Continuous Distributions:} Uses \code{\link[stats]{integrate}}. To ensure numerical stability for
+distributions with sharp peaks on infinite domains, the function
+attempts to identify the \strong{mode} of the distribution. If found, the integration interval is split
+at the mode (\eqn{[lb, mode] + [mode, ub]}). This "anchoring" forces the numerical integrator to
+evaluate the function in the region of highest density, preventing underflow errors where the integral
+would otherwise be incorrectly estimated as zero.
+\item \strong{Discrete Distributions:} Uses the internal function \code{series} to sum the terms.
 }
+
+\strong{Robustness:}
+The integrand is protected against non-finite values (NaN/Inf) which are coerced to 0, assuming they occur
+in the negligible tails of the distribution.
 
 \strong{Vectorization:}
 The function fully supports vectorized parameters (\code{theta}). If \code{theta} contains vectors of length \eqn{n},

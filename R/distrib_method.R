@@ -96,7 +96,7 @@ plot.distrib <- function(x, theta, xlim = NULL, ...) {
     seq_x <- seq(floor(xlim[1]), ceiling(xlim[2]), by = 1)
     seq_x <- seq_x[seq_x >= x$bounds[1] & seq_x <= x$bounds[2]]
   } else {
-    seq_x <- seq(xlim[1], xlim[2], length.out = 300)
+    seq_x <- seq(xlim[1], xlim[2], length.out = 1000)
   }
 
   dens_y <- x$pdf(seq_x, theta, log = FALSE)
@@ -104,7 +104,7 @@ plot.distrib <- function(x, theta, xlim = NULL, ...) {
   dots <- list(...)
   if (is.null(dots$main)) {
     param_str <- paste(names(theta), round(unlist(theta), 2), sep = "=", collapse = ", ")
-    dots$main <- paste0(tools::toTitleCase(x$distrib_name), " distribution\n(", param_str, ")")
+    dots$main <- paste0(x$distrib_name, " distribution\n(", param_str, ")")
   }
   if (is.null(dots$xlab)) dots$xlab <- "y"
   if (is.null(dots$ylab)) dots$ylab <- if (x$type == "discrete") "Probability (PMF)" else "Density (PDF)"
