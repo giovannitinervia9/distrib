@@ -527,3 +527,55 @@ time_complexity <- function(n, distrib, fun = median, times = 100L, ...) {
     hessian = time_hessian
   )
 }
+
+
+#' Generate Names for Hessian Matrix Components
+#'
+#' @description
+#' Helper function that generates a character vector representing the names of the
+#' unique second-order partial derivatives (Hessian matrix entries) for a given
+#' vector of parameter names.
+#'
+#' @param params A character vector containing the names of the parameters
+#'   (e.g., \code{c("mu", "sigma", "zi")}).
+#'
+#' @details
+#' The function produces names for a flattened symmetric Hessian matrix, organizing
+#' them in a specific order to facilitate access:
+#' \enumerate{
+#'   \item \strong{Diagonal elements}: The second derivatives with respect to the same parameter
+#'   are listed first (e.g., \code{"mu_mu"}, \code{"sigma_sigma"}).
+#'   \item \strong{Off-diagonal elements}: The mixed second derivatives are listed subsequently,
+#'   following the row-major order of the upper triangular matrix (i.e., \eqn{i < j}).
+#' }
+#'
+#' For a parameter vector of length \eqn{n}, the output vector will have length
+#' \eqn{n + \frac{n(n-1)}{2}}.
+#'
+#' @return A character vector of component names.
+#'
+#' @examples
+#' # Case with 2 parameters
+#' hess_names(c("mu", "sigma"))
+#' # Output: "mu_mu", "sigma_sigma", "mu_sigma"
+#'
+#' # Case with 3 parameters
+#' hess_names(c("mu", "theta", "zi"))
+#' # Output:
+#' #   Diagonals:    "mu_mu", "theta_theta", "zi_zi"
+#' #   Off-diagonal: "mu_theta", "mu_zi", "theta_zi"
+#'
+#' @export
+hess_names <- function(params) {
+  n_params <- length(params)
+  diagonal <- paste0(params, "_", params)
+  off_diagonal <- character(.5 * n_params * (n_params - 1))
+  k <- 1
+  for (i in 1:(n_params - 1)) {
+    for (j in (i + 1):n_params) {
+      off_diagonal[k] <- paste0(params[i], "_", params[j])
+      k <- k + 1
+    }
+  }
+  c(diagonal, off_diagonal)
+}
