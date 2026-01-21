@@ -64,6 +64,7 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
   o$dimension <- 1
   o$bounds <- c(0, 1)
 
+
   o$params <- c("mu", "phi")
   o$params_interpretation <- c(mu = "mean", phi = "precision")
   o$n_params <- 2
@@ -132,7 +133,7 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
 
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")

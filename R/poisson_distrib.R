@@ -105,7 +105,7 @@ poisson_distrib <- function(link_mu = log_link()) {
     }
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")

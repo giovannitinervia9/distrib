@@ -52,6 +52,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
   o$dimension <- 1
   o$bounds <- c(0, 1)
 
+
   o$params <- c("mu")
   o$params_interpretation <- c(mu = "probability")
   o$n_params <- 1
@@ -110,7 +111,7 @@ bernoulli_distrib <- function(link_mu = logit_link()) {
 
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")

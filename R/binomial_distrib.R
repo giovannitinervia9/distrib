@@ -57,6 +57,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
   o$size <- size
 
   o$bounds <- c(0, max(size))
+  o$included_bounds <- c(TRUE, TRUE)
 
   o$params <- c("mu")
   o$params_interpretation <- c(mu = "probability")
@@ -116,7 +117,7 @@ binomial_distrib <- function(link_mu = logit_link(), size = 1) {
 
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")

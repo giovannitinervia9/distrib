@@ -133,7 +133,7 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
 
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")
@@ -339,7 +339,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     }
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")
@@ -542,7 +542,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     }
     invalid_pars <- setdiff(par, o$params)
     if (length(invalid_pars) > 0) {
-      stop(sprintf(
+      warning(sprintf(
         "Invalid parameter(s) specified: %s. Available parameters are: %s.",
         paste(sQuote(invalid_pars), collapse = ", "),
         paste(sQuote(o$params), collapse = ", ")
