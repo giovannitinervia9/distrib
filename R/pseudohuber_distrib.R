@@ -245,7 +245,7 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
     sqrt_nu <- sqrt(nu)
     list(
       mu = mu,
-      sigma2 = (var(y) / sqrt_nu) * (besselK(sqrt_nu, 1) / besselK(sqrt_nu, 2)),
+      sigma = (var(y) / sqrt_nu) * (besselK(sqrt_nu, 1) / besselK(sqrt_nu, 2)),
       nu = nu
     )
   }
