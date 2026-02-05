@@ -487,6 +487,7 @@ time_complexity <- function(n, distrib, fun = median, times = 100L, ...) {
     b <- distrib$params_bounds
     links <- distrib$link_params
     theta <- vector("list", length = n_params)
+    names(theta) <- distrib$params
     for (i in 1:n_params) {
       theta[[i]] <- links[[i]]$linkinv(rnorm(n))
     }
