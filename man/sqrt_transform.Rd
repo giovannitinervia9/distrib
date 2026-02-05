@@ -19,5 +19,13 @@ Creates a transformer object for the square root transformation \eqn{Y = \sqrt{X
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = 2Y}
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{1}{y}}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -\dfrac{1}{y^2}}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = 2}
+
 \strong{Support:} Requires \eqn{X \ge 0}.
 }

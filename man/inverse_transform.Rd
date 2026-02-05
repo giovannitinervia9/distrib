@@ -19,6 +19,14 @@ Creates a transformer object for the reciprocal transformation \eqn{Y = 1/X}.
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = -\dfrac{1}{Y^2}} (Absolute value taken for density: \eqn{1/Y^2})
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = -\dfrac{2}{y}}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = \dfrac{2}{y^2}}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = \dfrac{2}{Y^3}}
+
 \strong{Support:} \eqn{X \neq 0}. Typically used for \eqn{X > 0} or \eqn{X < 0}.
 Since the function is strictly decreasing, bounds and quantiles are automatically swapped.
 }

@@ -13,11 +13,19 @@ A list of class \code{"transformer"}.
 Creates a transformer object for the inverse hyperbolic sine transformation \eqn{Y = \text{asinh}(X)}.
 }
 \details{
-\strong{Transformation:} \eqn{Y = \log(X + \sqrt{X^2 + 1})}
+\strong{Transformation:} \eqn{Y = \text{asinh}(X) = \log(X + \sqrt{X^2 + 1})}
 
 \strong{Inverse:} \eqn{X = \sinh(Y)}
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = \cosh(Y)}
+
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \tanh(y)}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = 1 - \tanh^2(y)}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = \sinh(Y)}
 
 \strong{Support:} Defined for all \eqn{X \in \mathbb{R}}.
 This is a popular alternative to the log transformation that handles zero and negative values.

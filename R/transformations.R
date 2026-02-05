@@ -14,8 +14,15 @@
 #'   \item \strong{name}: A character string identifying the transformation (e.g., "log", "logit").
 #'   \item \strong{trans_fun}: The forward transformation function \eqn{y = g(x)}.
 #'   \item \strong{trans_inv}: The inverse transformation function \eqn{x = g^{-1}(y)}.
-#'   \item \strong{trans_abs_jac}: The absolute value of the Jacobian of the inverse transformation \eqn{\left|J(y)\right| = \left|\dfrac{dX}{dY}\right|}.
+#'   \item \strong{trans_abs_jac}: The absolute value of the Jacobian of the inverse transformation
+#'     \eqn{\left|J(y)\right| = \left|\dfrac{dx}{dy}\right|}.
 #'     It must accept a \code{log} argument to return the log-absolute Jacobian.
+#'   \item \strong{trans_inv_hessian}: A function of \code{y} that returns the second derivative
+#'     of the inverse transformation: \eqn{\dfrac{d^2 x}{d y^2}}.
+#'   \item \strong{grad_log_jac}: A function of \code{y} that returns the first derivative of the
+#'     log-absolute Jacobian with respect to \eqn{y}: \eqn{\dfrac{\partial \log |J(y)|}{\partial y}}.
+#'   \item \strong{hess_log_jac}: A function of \code{y} that returns the second derivative of the
+#'     log-absolute Jacobian with respect to \eqn{y}: \eqn{\dfrac{\partial^2 \log |J(y)|}{\partial y^2}}.
 #'   \item \strong{bounds_fun}: A function that takes the original distribution bounds and
 #'     returns the transformed support bounds.
 #'   \item \strong{valid_support}: A function that checks if the input distribution's support
@@ -24,20 +31,6 @@
 #'     monotonically decreasing (e.g., \eqn{1/X}).
 #' }
 #'
-#' @section Available Transformers:
-#' \itemize{
-#'   \item \code{\link{log_transform}}
-#'   \item \code{\link{exp_transform}}
-#'   \item \code{\link{logit_transform}}
-#'   \item \code{\link{expit_transform}}
-#'   \item \code{\link{softplus_transform}}
-#'   \item \code{\link{inverse_transform}}
-#'   \item \code{\link{sqrt_transform}}
-#'   \item \code{\link{power_transform}}
-#'   \item \code{\link{bc_transform}} (Box-Cox)
-#'   \item \code{\link{yj_transform}} (Yeo-Johnson)
-#'   \item \code{\link{affine_transform}}
-#' }
 #'
 #' @seealso \code{\link{transformation}}
 NULL
@@ -57,6 +50,13 @@ NULL
 #' **Inverse:** \eqn{X = \exp(Y)}
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = \exp(Y)}
+#'
+#' **Log-Jacobian Derivatives:** #' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = 1}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = 0}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = \exp(Y)}
 #'
 #' **Support:** Requires \eqn{X > 0}. Maps to \eqn{Y \in (-\infty, \infty)}.
 #'
@@ -85,6 +85,17 @@ log_transform <- function() {
       exp(y)
     }
   }
+  o$trans_inv_hessian <- function(y) {
+    exp(y)
+  }
+  o$grad_log_jac <- function(y) {
+    rep(1, length(y))
+  }
+
+  o$hess_log_jac <- function(y) {
+    rep(0, length(y))
+  }
+
   o$decreasing <- FALSE
   class(o) <- "transformer"
   o
@@ -106,6 +117,13 @@ log_transform <- function() {
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = \dfrac{1}{Y}}
 #'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = -\dfrac{1}{y}}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = \dfrac{1}{y^2}}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = -\dfrac{1}{Y^2}}
 #' **Support:** Defined for \eqn{X \in (-\infty, \infty)}. Maps to \eqn{Y \in (0, \infty)}.
 #'
 #' @return A list of class \code{"transformer"}.
@@ -129,6 +147,19 @@ exp_transform <- function() {
       1 / y
     }
   }
+
+  o$grad_log_jac <- function(y) {
+    -1 / y
+  }
+
+  o$hess_log_jac <- function(y) {
+    1 / y^2
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    -1 / y^2
+  }
+
   o$decreasing <- FALSE
   class(o) <- "transformer"
   o
@@ -148,6 +179,14 @@ exp_transform <- function() {
 #' **Inverse:** \eqn{X = 1/Y}
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = -\dfrac{1}{Y^2}} (Absolute value taken for density: \eqn{1/Y^2})
+#'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = -\dfrac{2}{y}}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = \dfrac{2}{y^2}}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = \dfrac{2}{Y^3}}
 #'
 #' **Support:** \eqn{X \neq 0}. Typically used for \eqn{X > 0} or \eqn{X < 0}.
 #' Since the function is strictly decreasing, bounds and quantiles are automatically swapped.
@@ -180,6 +219,19 @@ inverse_transform <- function() {
       1 / y^2
     }
   }
+
+  o$grad_log_jac <- function(y) {
+    -2 / y
+  }
+
+  o$hess_log_jac <- function(y) {
+    2 / y^2
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    2 / y^3
+  }
+
   o$decreasing <- TRUE
   class(o) <- "transformer"
   o
@@ -199,6 +251,14 @@ inverse_transform <- function() {
 #' **Inverse:** \eqn{X = Y^2}
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = 2Y}
+#'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{1}{y}}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -\dfrac{1}{y^2}}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = 2}
 #'
 #' **Support:** Requires \eqn{X \ge 0}.
 #'
@@ -226,6 +286,20 @@ sqrt_transform <- function() {
       2 * y
     }
   }
+
+  o$grad_log_jac <- function(y) {
+    1 / y
+  }
+
+  o$hess_log_jac <- function(y) {
+    -1 / y^2
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    # d2(y^2)/dy2 = 2
+    rep(2, length(y))
+  }
+
   o$decreasing <- FALSE
   class(o) <- "transformer"
   o
@@ -248,10 +322,18 @@ sqrt_transform <- function() {
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = \dfrac{1}{p} Y^{\dfrac{1}{p} - 1}}
 #'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = (\frac{1}{p} - 1) \frac{1}{y}}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -(\frac{1}{p} - 1) \frac{1}{y^2}}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = \frac{1}{p}(\frac{1}{p} - 1) Y^{\frac{1}{p} - 2}}
+#'
 #' **Support & Constraints:**
 #' \itemize{
 #'   \item If \eqn{p} is a fractional value, \eqn{X} must be non-negative.
-#'   \item If \eqn{p} is an even integer, the transformation is not monotonic on mixed domains (negative to positive). Support is restricted to \eqn{X \ge 0} or \eqn{X \le 0}.
+#'   \item If \eqn{p} is an even integer, the transformation is not monotonic on mixed domains.
 #'   \item If \eqn{p < 0}, the transformation is decreasing.
 #' }
 #'
@@ -263,28 +345,24 @@ power_transform <- function(p = 2) {
   # log(J) = -log(|p|) + (1/p - 1) * log(|Y|)
   o <- list()
   o$name <- paste0("power_", p)
+
   o$valid_support <- function(bounds) {
     is_integer <- (round(p) == p)
     lb <- bounds[1]
     ub <- bounds[2]
     if (!is_integer && lb < 0) {
-      # Fractional powers of negatives forbidden
       FALSE
     } else if (p < 0 && lb <= 0 && ub >= 0) {
-      # Division by zero forbidden
       FALSE
     } else if (is_integer && (p %% 2 == 0) && lb < 0 && ub > 0) {
-      # EVEN powers on mixed intervals (e.g. -2, 2) are not monotonic
       FALSE
     } else {
       TRUE
     }
   }
+
   o$bounds_fun <- function(bounds) {
     res <- bounds^p
-    # Sort necessary if:
-    # 1. p is negative (e.g. x^-1 reverses order)
-    # 2. p is even AND we are on negative numbers (e.g. [-3, -2]^2 -> [9, 4])
     is_even_integer <- (round(p) == p && p %% 2 == 0)
     if (p < 0 || (is_even_integer && bounds[2] < 0)) {
       sort(res)
@@ -292,21 +370,33 @@ power_transform <- function(p = 2) {
       res
     }
   }
+
   o$trans_fun <- function(x) {
     x^p
   }
+
   o$trans_inv <- function(y) {
-    # Safe handling of roots of negative numbers (e.g. cube root of -8)
     sign(y) * abs(y)^(1 / p)
   }
+
   o$trans_abs_jac <- function(y, log = TRUE) {
     log_J <- -log(abs(p)) + (1 / p - 1) * log(abs(y))
-    if (log) {
-      log_J
-    } else {
-      exp(log_J)
-    }
+    if (log) log_J else exp(log_J)
   }
+
+  o$grad_log_jac <- function(y) {
+    (1 / p - 1) / y
+  }
+
+  o$hess_log_jac <- function(y) {
+    -(1 / p - 1) / y^2
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    # d2x/dy2 = 1/p * (1/p - 1) * y^(1/p - 2)
+    (1 / p) * (1 / p - 1) * sign(y) * abs(y)^(1 / p - 2)
+  }
+
   o$decreasing <- (p < 0)
   class(o) <- "transformer"
   o
@@ -321,11 +411,19 @@ power_transform <- function(p = 2) {
 #' Creates a transformer object for the inverse hyperbolic sine transformation \eqn{Y = \text{asinh}(X)}.
 #'
 #' @details
-#' **Transformation:** \eqn{Y = \log(X + \sqrt{X^2 + 1})}
+#' **Transformation:** \eqn{Y = \text{asinh}(X) = \log(X + \sqrt{X^2 + 1})}
 #'
 #' **Inverse:** \eqn{X = \sinh(Y)}
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = \cosh(Y)}
+#'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \tanh(y)}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = 1 - \tanh^2(y)}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = \sinh(Y)}
 #'
 #' **Support:** Defined for all \eqn{X \in \mathbb{R}}.
 #' This is a popular alternative to the log transformation that handles zero and negative values.
@@ -351,6 +449,21 @@ asinh_transform <- function() {
       cosh(y)
     }
   }
+
+  o$grad_log_jac <- function(y) {
+    tanh(y)
+  }
+
+  o$hess_log_jac <- function(y) {
+    # sech^2(y) = 1 - tanh^2(y)
+    1 - tanh(y)^2
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    # d2(sinh(y))/dy2 = sinh(y)
+    sinh(y)
+  }
+
   o$decreasing <- FALSE
   class(o) <- "transformer"
   o
@@ -375,16 +488,19 @@ asinh_transform <- function() {
 #'
 #' **Inverse:** \eqn{X = (\lambda Y + 1)^{1/\lambda}}
 #'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{1-\lambda}{\lambda y + 1}}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -\dfrac{\lambda(1-\lambda)}{(\lambda y + 1)^2}}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = (1-\lambda)(\lambda Y + 1)^{\frac{1-2\lambda}{\lambda}}}
+#'
 #' **Support:** Requires \eqn{X > 0}.
 #'
 #' @return A list of class \code{"transformer"}.
 #' @export
 bc_transform <- function(lambda) {
-  # Box-Cox Transformation
-  # If lambda -> 0: Log transform
-  # If lambda != 0: Y = (X^lambda - 1) / lambda
-  # Inverse: X = (lambda * Y + 1)^(1/lambda)
-
   # Handle the limiting case where lambda is close to 0
   if (abs(lambda) < 1e-10) {
     l <- log_transform()
@@ -395,19 +511,13 @@ bc_transform <- function(lambda) {
   o <- list()
   o$name <- paste0("box_cox_", lambda)
 
-  # Strictly defined for positive data (x > 0)
   o$valid_support <- function(bounds) {
     bounds[1] > 0
   }
 
   o$bounds_fun <- function(bounds) {
     res <- (bounds^lambda - 1) / lambda
-    # If lambda < 0, the function is decreasing
-    if (lambda < 0) {
-      sort(res)
-    } else {
-      res
-    }
+    if (lambda < 0) sort(res) else res
   }
 
   o$trans_fun <- function(x) {
@@ -416,23 +526,31 @@ bc_transform <- function(lambda) {
 
   o$trans_inv <- function(y) {
     base <- lambda * y + 1
-    # Numerical safety clip for floating point errors near zero
     base[base < 0] <- 0
     base^(1 / lambda)
   }
 
   o$trans_abs_jac <- function(y, log = TRUE) {
-    # J = dX/dY = (lambda * Y + 1)^((1 - lambda) / lambda)
     term <- lambda * y + 1
-    term[term < 1e-16] <- 1e-16 # Avoid log(0) issues
-
+    term[term < 1e-16] <- 1e-16
     log_J <- ((1 - lambda) / lambda) * log(term)
+    if (log) log_J else exp(log_J)
+  }
 
-    if (log) {
-      log_J
-    } else {
-      exp(log_J)
-    }
+  o$grad_log_jac <- function(y) {
+    term <- lambda * y + 1
+    (1 - lambda) / term
+  }
+
+  o$hess_log_jac <- function(y) {
+    term <- lambda * y + 1
+    -(lambda * (1 - lambda)) / (term^2)
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    term <- lambda * y + 1
+    term[term < 0] <- 0
+    (1 - lambda) * term^((1 - 2 * lambda) / lambda)
   }
 
   o$decreasing <- (lambda < 0)
@@ -457,15 +575,19 @@ bc_transform <- function(lambda) {
 #'   \item \eqn{X < 0}: Box-Cox of \eqn{|X|+1} with parameter \eqn{2-\lambda}, negated.
 #' }
 #'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{1-\lambda}{\lambda y + 1}} for \eqn{y \ge 0}, and \eqn{\dfrac{\lambda-1}{1-(2-\lambda)y}} for \eqn{y < 0}.
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -\dfrac{\lambda(1-\lambda)}{(\lambda y + 1)^2}} for \eqn{y \ge 0}, and \eqn{\dfrac{(\lambda-1)(2-\lambda)}{(1-(2-\lambda)y)^2}} for \eqn{y < 0}.
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2}} is computed piecewise based on the second derivative of the inverse Box-Cox components.
+#'
 #' **Support:** Defined for all \eqn{X \in \mathbb{R}}.
 #'
 #' @return A list of class \code{"transformer"}.
 #' @export
 yj_transform <- function(lambda) {
-  # Yeo-Johnson Transformation (Piecewise Box-Cox for real line)
-  # Inverse logic is split based on Y >= 0 or Y < 0
-  # Jacobian computed via inverse function theorem: log(J) = -log(dY/dX)
-
   o <- list()
   o$name <- paste0("yeo_johnson_", lambda)
 
@@ -477,15 +599,11 @@ yj_transform <- function(lambda) {
     y <- numeric(length(x))
     pos <- x >= 0
     neg <- !pos
-
-    # Case 1: x >= 0 (Box-Cox with lambda + 1)
     if (abs(lambda) < 1e-10) {
       y[pos] <- log1p(x[pos])
     } else {
       y[pos] <- ((x[pos] + 1)^lambda - 1) / lambda
     }
-
-    # Case 2: x < 0 (Box-Cox on exp(-x) with 2 - lambda)
     lam2 <- 2 - lambda
     if (abs(lam2) < 1e-10) {
       y[neg] <- -log1p(-x[neg])
@@ -496,7 +614,6 @@ yj_transform <- function(lambda) {
   }
 
   o$bounds_fun <- function(bounds) {
-    # Monotonic non-decreasing
     o$trans_fun(bounds)
   }
 
@@ -504,15 +621,11 @@ yj_transform <- function(lambda) {
     x <- numeric(length(y))
     pos <- y >= 0
     neg <- !pos
-
-    # Inverse for Y >= 0
     if (abs(lambda) < 1e-10) {
       x[pos] <- expm1(y[pos])
     } else {
       x[pos] <- (lambda * y[pos] + 1)^(1 / lambda) - 1
     }
-
-    # Inverse for Y < 0
     lam2 <- 2 - lambda
     if (abs(lam2) < 1e-10) {
       x[neg] <- -expm1(-y[neg])
@@ -523,28 +636,60 @@ yj_transform <- function(lambda) {
   }
 
   o$trans_abs_jac <- function(y, log = TRUE) {
-    # 1. Recover X to use the simpler forward derivative formula
-    x <- o$trans_inv(y)
-
-    log_dy_dx <- numeric(length(x))
-    pos <- x >= 0
+    log_J <- numeric(length(y))
+    pos <- y >= 0
     neg <- !pos
-
     if (any(pos)) {
-      log_dy_dx[pos] <- (lambda - 1) * log1p(x[pos])
+      log_J[pos] <- ((1 - lambda) / lambda) * log(lambda * y[pos] + 1)
     }
     if (any(neg)) {
-      log_dy_dx[neg] <- (1 - lambda) * log1p(-x[neg])
+      lam2 <- 2 - lambda
+      log_J[neg] <- ((lambda - 1) / lam2) * log(1 - lam2 * y[neg])
     }
+    if (log) log_J else exp(log_J)
+  }
 
-    # 2. Invert gradient (log(J_inv) = -log(J_fwd))
-    log_J <- -log_dy_dx
-
-    if (log) {
-      log_J
-    } else {
-      exp(log_J)
+  o$grad_log_jac <- function(y) {
+    grad <- numeric(length(y))
+    pos <- y >= 0
+    neg <- !pos
+    if (any(pos)) {
+      grad[pos] <- (1 - lambda) / (lambda * y[pos] + 1)
     }
+    if (any(neg)) {
+      lam2 <- 2 - lambda
+      grad[neg] <- (lambda - 1) / (1 - lam2 * y[neg])
+    }
+    grad
+  }
+
+  o$hess_log_jac <- function(y) {
+    hess <- numeric(length(y))
+    pos <- y >= 0
+    neg <- !pos
+    if (any(pos)) {
+      hess[pos] <- -(lambda * (1 - lambda)) / (lambda * y[pos] + 1)^2
+    }
+    if (any(neg)) {
+      lam2 <- 2 - lambda
+      hess[neg] <- ((lambda - 1) * lam2) / (1 - lam2 * y[neg])^2
+    }
+    hess
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    h <- numeric(length(y))
+    pos <- y >= 0
+    neg <- !pos
+    if (any(pos)) {
+      h[pos] <- (1 - lambda) * (lambda * y[pos] + 1)^((1 - 2 * lambda) / lambda)
+    }
+    if (any(neg)) {
+      lam2 <- 2 - lambda
+      # Derivata seconda di 1 - (1 - lam2*y)^(1/lam2)
+      h[neg] <- (lam2 - 1) * (1 - lam2 * y[neg])^((1 - 2 * lam2) / lam2)
+    }
+    h
   }
 
   o$decreasing <- FALSE
@@ -568,7 +713,15 @@ yj_transform <- function(lambda) {
 #'
 #' **Inverse:** \eqn{X = (Y - \text{loc}) / \text{scale}}
 #'
-#' **Jacobian:** \eqn{J = 1 / |\text{scale}|}
+#' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = 1 / \text{scale}}
+#'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = 0}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = 0}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = 0}
 #'
 #' **Support:** Defined for all \eqn{X \in \mathbb{R}}.
 #'
@@ -617,6 +770,20 @@ affine_transform <- function(loc = 0, scale = 1) {
     }
   }
 
+  # --- Nuovi slot per derivate rispetto a y ---
+
+  o$grad_log_jac <- function(y) {
+    rep(0, length(y))
+  }
+
+  o$hess_log_jac <- function(y) {
+    rep(0, length(y))
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    rep(0, length(y))
+  }
+
   o$decreasing <- (scale < 0)
   class(o) <- "transformer"
   o
@@ -637,6 +804,14 @@ affine_transform <- function(loc = 0, scale = 1) {
 #'
 #' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = X(1-X)} (corresponds to the PDF of the Logistic distribution).
 #'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = 1 - 2\text{plogis}(y)}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -2\text{dlogis}(y)}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = \text{dlogis}(y)(1 - 2\text{plogis}(y))}
+#'
 #' **Support:** Requires \eqn{X \in (0, 1)}.
 #'
 #' @return A list of class \code{"transformer"}.
@@ -651,13 +826,10 @@ logit_transform <- function() {
   o$name <- "logit"
 
   o$valid_support <- function(bounds) {
-    # Support must be within (0, 1). Closed interval [0, 1] is allowed theoretically,
-    # but 0 and 1 map to -Inf and Inf respectively.
     (bounds[1] >= 0 & bounds[2] <= 1)
   }
 
   o$bounds_fun <- function(bounds) {
-    # qlogis correctly handles 0 -> -Inf and 1 -> Inf
     stats::qlogis(bounds)
   }
 
@@ -665,8 +837,22 @@ logit_transform <- function() {
   o$trans_inv <- stats::plogis
 
   o$trans_abs_jac <- function(y, log = TRUE) {
-    # The derivative of the inverse function (plogis) is the logistic density (dlogis).
     stats::dlogis(y, log = log)
+  }
+
+  o$grad_log_jac <- function(y) {
+    # Derivative of log(dlogis(y)) = 1 - 2*plogis(y)
+    1 - 2 * stats::plogis(y)
+  }
+
+  o$hess_log_jac <- function(y) {
+    # Derivative of (1 - 2*plogis(y)) = -2*dlogis(y)
+    -2 * stats::dlogis(y)
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    # Second derivative of plogis(y): dlogis(y)*(1 - 2*plogis(y))
+    stats::dlogis(y) * (1 - 2 * stats::plogis(y))
   }
 
   o$decreasing <- FALSE
@@ -688,7 +874,15 @@ logit_transform <- function() {
 #'
 #' **Inverse:** \eqn{X = \text{logit}(Y)}
 #'
-#' **Jacobian:** \eqn{J = \dfrac{1}{Y(1-Y)}}
+#' **Jacobian:** \eqn{J = \dfrac{dX}{dY} = \dfrac{1}{Y(1-Y)}}
+#'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{2y - 1}{y(1-y)}}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = \dfrac{1}{y^2} + \dfrac{1}{(1-y)^2}}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = \dfrac{2y-1}{y^2(1-y)^2}}
 #'
 #' **Support:** Defined for \eqn{X \in \mathbb{R}}. Maps to \eqn{Y \in (0, 1)}.
 #'
@@ -708,7 +902,6 @@ expit_transform <- function() {
   }
 
   o$bounds_fun <- function(bounds) {
-    # Maps (-Inf, Inf) to (0, 1)
     stats::plogis(bounds)
   }
 
@@ -716,18 +909,24 @@ expit_transform <- function() {
   o$trans_inv <- stats::qlogis
 
   o$trans_abs_jac <- function(y, log = TRUE) {
-    # We are in the domain y in (0, 1).
-    # J = 1 / (y * (1 - y))
-
-    # Using log1p(-y) is more numerically stable than log(1 - y) for small y.
     # log(J) = - (log(y) + log(1 - y))
     val <- -(log(y) + log1p(-y))
+    if (log) val else exp(val)
+  }
 
-    if (log) {
-      val
-    } else {
-      exp(val)
-    }
+  o$grad_log_jac <- function(y) {
+    # d/dy [-log(y) - log(1-y)] = -1/y + 1/(1-y)
+    -1 / y + 1 / (1 - y)
+  }
+
+  o$hess_log_jac <- function(y) {
+    # d/dy [-1/y + 1/(1-y)] = 1/y^2 + 1/(1-y)^2
+    1 / y^2 + 1 / (1 - y)^2
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    # d2/dy2 [log(y/(1-y))] = (2y - 1) / (y^2 * (1-y)^2)
+    (2 * y - 1) / (y^2 * (1 - y)^2)
   }
 
   o$decreasing <- FALSE
@@ -746,10 +945,6 @@ expit_transform <- function() {
 #' This transformation is used to map a non-negative random variable \eqn{X \in (0, \infty)}
 #' to the entire real line \eqn{Y \in \mathbb{R}}.
 #'
-#' Unlike the logarithmic/exponential transformation, the Softplus function approaches linearity
-#' for large values (\eqn{X \approx Y} as \eqn{Y \to \infty}), while behaving like an exponential
-#' near zero. This often results in better numerical stability for heavy-tailed distributions.
-#'
 #' @param a Numeric. Scale parameter. Defaults to 1.
 #'
 #' @details
@@ -759,6 +954,14 @@ expit_transform <- function() {
 #'
 #' **Jacobian:** \eqn{J = \text{sigmoid}(aY)}
 #'
+#' **Log-Jacobian Derivatives:**
+#' \itemize{
+#'   \item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = a(1 - \text{plogis}(ay))}
+#'   \item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -a^2 \text{dlogis}(ay)}
+#' }
+#'
+#' **Inverse Hessian:** \eqn{\dfrac{d^2 X}{d Y^2} = a \cdot \text{dlogis}(ay)}
+#'
 #' **Support:** Requires \eqn{X > 0}. Maps to \eqn{Y \in \mathbb{R}}.
 #'
 #' @return A list of class \code{"transformer"}.
@@ -767,9 +970,6 @@ softplus_transform <- function(a = 1) {
   # Transformation: Y = 1/a * log(exp(a*X) - 1)  [Inverse Softplus]
   # Inverse:        X = 1/a * log(1 + exp(a*Y))  [Softplus]
   # Jacobian:       dX/dY = sigmoid(a*Y) = 1 / (1 + exp(-a*Y))
-  #
-  # This maps a positive variable X (0, Inf) to the real line Y (-Inf, Inf).
-  # Often used to ensure positivity of parameters (like variance).
 
   if (a <= 0) {
     stop("Scale parameter 'a' must be greater than 0")
@@ -778,42 +978,41 @@ softplus_transform <- function(a = 1) {
   o <- list()
   o$name <- paste0("softplus_a", round(a, 5))
 
-  # Strictly defined for non-negative data (X >= 0)
-  # X=0 maps to Y=-Inf
   o$valid_support <- function(bounds) {
     bounds[1] >= 0
   }
 
   o$bounds_fun <- function(bounds) {
-    # Forward transform: log(expm1(a * x)) / a
-    # Handles 0 -> -Inf correctly
     res <- log(expm1(a * bounds)) / a
     res[bounds == 0] <- -Inf
     res
   }
 
   o$trans_fun <- function(x) {
-    # Forward: X -> Y
-    # log(expm1(z)) is stable for small z.
-    # For very large z, expm1(z) ~ exp(z), so result ~ z/a.
     log(expm1(a * x)) / a
   }
 
   o$trans_inv <- function(y) {
-    # Inverse: Y -> X (The Softplus function)
-    # Analytical: log(1 + exp(a*y)) / a
-    # Numerical trick: to avoid overflow when a*y is large positive,
-    # we rewrite as: y + log(1 + exp(-a*y)) / a  (if y > 0)
-
-    # We use the robust implementation provided:
     pmax(0, y) + log1p(exp(-abs(a * y))) / a
   }
 
   o$trans_abs_jac <- function(y, log = TRUE) {
-    # Jacobian dX/dY is the Sigmoid function: 1 / (1 + exp(-a*y))
-    # This corresponds exactly to the CDF of the Logistic distribution.
-    # R's plogis is numerically stable and supports log.p directly.
     stats::plogis(a * y, log.p = log)
+  }
+
+  o$grad_log_jac <- function(y) {
+    # d/dy [log(plogis(a*y))] = a * (1 - plogis(a*y))
+    a * (1 - stats::plogis(a * y))
+  }
+
+  o$hess_log_jac <- function(y) {
+    # d/dy [a * (1 - plogis(a*y))] = -a^2 * dlogis(a*y)
+    -(a^2) * stats::dlogis(a * y)
+  }
+
+  o$trans_inv_hessian <- function(y) {
+    # d/dy [plogis(a*y)] = a * dlogis(a*y)
+    a * stats::dlogis(a * y)
   }
 
   o$decreasing <- FALSE
@@ -873,6 +1072,16 @@ softplus_transform <- function(a = 1) {
 #'     \eqn{\mathbb{E}[\nabla^2 \ell] = -\mathbb{E}[\nabla \ell (\theta)(\nabla \ell (\theta))^\top]}.
 #' }
 #'
+#' **Derivatives with respect to \eqn{y}:**
+#' While the derivatives with respect to the parameters \eqn{\theta} remain unchanged (evaluated at \eqn{g^{-1}(y)}),
+#' the derivatives with respect to the observed variable \eqn{y} must account for the transformation
+#' via the chain rule. Let \eqn{x = g^{-1}(y)} and \eqn{J = \dfrac{dx}{dy}}:
+#' \itemize{
+#'   \item **Gradient:** \deqn{\dfrac{\partial \ell_Y}{\partial y} = \dfrac{\partial \ell_X}{\partial x} \cdot J + \dfrac{\partial \log |J|}{\partial y}}
+#'   \item **Hessian:** \deqn{\dfrac{\partial^2 \ell_Y}{\partial y^2} = \dfrac{\partial^2 \ell_X}{\partial x^2} \cdot J^2 + \dfrac{\partial \ell_X}{\partial x} \cdot \dfrac{d J}{d y} + \dfrac{\partial^2 \log |J|}{\partial y^2}}
+#' }
+#' where \eqn{\dfrac{d J}{d y}} is the second derivative of the inverse transformation (\code{trans_inv_hessian}).
+#'
 #' **Numerical Stability:**
 #' The function includes safeguards for calculating the PDF in the tails:
 #' \itemize{
@@ -916,6 +1125,8 @@ transformation <- function(distrib, transformer) {
   old_kernel <- distrib$kernel
   old_initialize <- distrib$initialize
   old_median <- distrib$median
+  old_grad_y <- distrib$grad_y
+  old_hess_y <- distrib$hess_y
 
   d$distrib_name <- paste0(tr$name, "(", distrib$distrib_name, ")")
   d$bounds <- tr$bounds_fun(distrib$bounds)
@@ -967,6 +1178,23 @@ transformation <- function(distrib, transformer) {
       old_hessian(tr$trans_inv(y), theta, expected = FALSE)
     }
   }
+
+  d$grad_y <- function(y, theta) {
+    x <- tr$trans_inv(y)
+    J <- tr$trans_abs_jac(y, log = FALSE)
+    old_grad_y(x, theta) * J + tr$grad_log_jac(y)
+  }
+
+  d$hess_y <- function(y, theta) {
+    x <- tr$trans_inv(y)
+    J <- tr$trans_abs_jac(y, log = FALSE)
+    d2x_dy2 <- tr$trans_inv_hessian(y)
+
+    old_hess_y(x, theta) * (J^2) +
+      old_grad_y(x, theta) * d2x_dy2 +
+      tr$hess_log_jac(y)
+  }
+
 
   d$kernel <- function(y, theta, log = TRUE) {
     k <- old_kernel(tr$trans_inv(y), theta, log = TRUE) + tr$trans_abs_jac(y, log = TRUE)

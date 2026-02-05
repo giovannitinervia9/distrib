@@ -98,4 +98,10 @@ The parameters \eqn{p} and \eqn{\theta} are orthogonal.
 \item \strong{Block \eqn{pp}}: \eqn{\mathbb{E}[-\partial^2 \ell] = \frac{1}{p(1-p)}}.
 \item \strong{Block \eqn{\theta\theta}}: \eqn{(1-p) \mathbb{E}[H_W]} (Fisher information of \eqn{W} scaled by probability of non-zero).
 }
+
+\strong{8. Derivatives with respect to \eqn{y}:}
+\itemize{
+\item \strong{Gradient:} \eqn{\nabla_y \ell = 0} if \eqn{y=0}, else \eqn{\nabla_y \log f_W(y)}.
+\item \strong{Hessian:} \eqn{\nabla^2_y \ell = 0} if \eqn{y=0}, else \eqn{\nabla^2_y \log f_W(y)}.
+}
 }

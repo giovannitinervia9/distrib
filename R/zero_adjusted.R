@@ -483,6 +483,12 @@ zero_adjusted_discrete <- function(distrib, link_za = logit_link()) {
 #'   \item **Block \eqn{\theta\theta}**: \eqn{(1-p) \mathbb{E}[H_W]} (Fisher information of \eqn{W} scaled by probability of non-zero).
 #' }
 #'
+#' **8. Derivatives with respect to \eqn{y}:**
+#' \itemize{
+#'   \item **Gradient:** \eqn{\nabla_y \ell = 0} if \eqn{y=0}, else \eqn{\nabla_y \log f_W(y)}.
+#'   \item **Hessian:** \eqn{\nabla^2_y \ell = 0} if \eqn{y=0}, else \eqn{\nabla^2_y \log f_W(y)}.
+#' }
+#'
 #' @return A new object of class \code{"distrib"} representing the Zero-Adjusted Continuous distribution.
 #'
 #' @export
@@ -690,7 +696,39 @@ zero_adjusted_continuous <- function(distrib, link_za = logit_link()) {
     expand_params(res_hess[hess_names(o$params)], length(y))
   }
 
-  # --- 9. Moments ---
+
+  # --- 9. Derivatives w.r.t Y ---
+  o$grad_y <- function(y, theta) {
+    pars <- split_theta(theta)
+    n <- length(y)
+    g <- numeric(n)
+
+    is_zero <- (y == 0)
+
+    if (any(!is_zero)) {
+      pars_sub <- lapply(pars$orig, function(x) if (length(x) > 1) x[!is_zero] else x)
+
+      g[!is_zero] <- distrib$grad_y(y[!is_zero], pars_sub)
+    }
+    g
+  }
+
+  o$hess_y <- function(y, theta) {
+    pars <- split_theta(theta)
+    n <- length(y)
+    h <- numeric(n)
+
+    is_zero <- (y == 0)
+
+    if (any(!is_zero)) {
+      pars_sub <- lapply(pars$orig, function(x) if (length(x) > 1) x[!is_zero] else x)
+      h[!is_zero] <- distrib$hess_y(y[!is_zero], pars_sub)
+    }
+    h
+  }
+
+
+  # --- 10. Moments ---
   o$raw_moment <- function(n, theta) {
     if (n == 0) {
       return(1)

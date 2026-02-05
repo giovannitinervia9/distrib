@@ -24,5 +24,13 @@ Creates a transformer object for the one-parameter Box-Cox transformation.
 
 \strong{Inverse:} \eqn{X = (\lambda Y + 1)^{1/\lambda}}
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{1-\lambda}{\lambda y + 1}}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -\dfrac{\lambda(1-\lambda)}{(\lambda y + 1)^2}}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = (1-\lambda)(\lambda Y + 1)^{\frac{1-2\lambda}{\lambda}}}
+
 \strong{Support:} Requires \eqn{X > 0}.
 }

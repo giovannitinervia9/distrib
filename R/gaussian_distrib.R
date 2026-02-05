@@ -52,6 +52,10 @@
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \sigma^2}\right] = -\dfrac{2}{\sigma^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma}\right] = 0}
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{y-\mu}{\sigma^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{1}{\sigma^2}}
+#'
 #' @return A list of class \code{"distrib"} containing:
 #' \item{distrib_name}{The name of the distribution ("gaussian").}
 #' \item{type}{The type of distribution ("continuous").}
@@ -172,6 +176,14 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
     }
   }
 
+  o$grad_y <- function(y, theta) {
+    -(y - theta[[1]]) / (theta[[2]]^2)
+  }
+
+  o$hess_y <- function(y, theta) {
+    -1 / (theta[[2]]^2)
+  }
+
   o$kernel <- function(y, theta, log = TRUE) {
     k <- -.5 * ((y - theta[[1]]) / theta[[2]])^2
     if (log) {
@@ -265,6 +277,10 @@ gaussian_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\dfrac{1}{\sigma^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial (\sigma^2)^2}\right] = -\dfrac{1}{2(\sigma^2)^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma^2}\right] = 0}
+#'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{y-\mu}{\sigma^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{1}{\sigma^2}}
 #'
 #' @return A list of class \code{"distrib"} containing the components for the Gaussian distribution (variance parameterization).
 #'
@@ -376,6 +392,14 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
     }
   }
 
+  o$grad_y <- function(y, theta) {
+    -(y - theta[[1]]) / theta[[2]]
+  }
+
+  o$hess_y <- function(y, theta) {
+    -1 / theta[[2]]
+  }
+
   o$kernel <- function(y, theta, log = TRUE) {
     k <- -.5 * (y - theta[[1]])^2 / theta[[2]]
     if (log) {
@@ -413,7 +437,7 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
   o$initialize <- function(y) {
     list(
       mu = mean(y),
-      sigma = var(y)
+      sigma2 = var(y)
     )
   }
 
@@ -468,6 +492,10 @@ gaussian2_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\tau}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \tau^2}\right] = -\dfrac{1}{2\tau^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \tau}\right] = 0}
+#'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\tau(y - \mu)}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\tau}
 #'
 #' @return A list of class \code{"distrib"} containing the components for the Gaussian distribution (precision parameterization).
 #'
@@ -578,6 +606,14 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
     }
   }
 
+  o$grad_y <- function(y, theta) {
+    -theta[[2]] * (y - theta[[1]])
+  }
+
+  o$hess_y <- function(y, theta) {
+    -theta[[2]]
+  }
+
   o$kernel <- function(y, theta, log = TRUE) {
     k <- -.5 * (y - theta[[1]])^2 * theta[[2]]
     if (log) {
@@ -615,7 +651,7 @@ gaussian3_distrib <- function(link_mu = identity_link(), link_tau = log_link()) 
   o$initialize <- function(y) {
     list(
       mu = mean(y),
-      sigma = 1 / var(y)
+      tau = 1 / var(y)
     )
   }
 

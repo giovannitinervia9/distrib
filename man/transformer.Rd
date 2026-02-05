@@ -15,31 +15,21 @@ A \code{transformer} object must contain the following components:
 \item \strong{name}: A character string identifying the transformation (e.g., "log", "logit").
 \item \strong{trans_fun}: The forward transformation function \eqn{y = g(x)}.
 \item \strong{trans_inv}: The inverse transformation function \eqn{x = g^{-1}(y)}.
-\item \strong{trans_abs_jac}: The absolute value of the Jacobian of the inverse transformation \eqn{\left|J(y)\right| = \left|\dfrac{dX}{dY}\right|}.
+\item \strong{trans_abs_jac}: The absolute value of the Jacobian of the inverse transformation
+\eqn{\left|J(y)\right| = \left|\dfrac{dx}{dy}\right|}.
 It must accept a \code{log} argument to return the log-absolute Jacobian.
+\item \strong{trans_inv_hessian}: A function of \code{y} that returns the second derivative
+of the inverse transformation: \eqn{\dfrac{d^2 x}{d y^2}}.
+\item \strong{grad_log_jac}: A function of \code{y} that returns the first derivative of the
+log-absolute Jacobian with respect to \eqn{y}: \eqn{\dfrac{\partial \log |J(y)|}{\partial y}}.
+\item \strong{hess_log_jac}: A function of \code{y} that returns the second derivative of the
+log-absolute Jacobian with respect to \eqn{y}: \eqn{\dfrac{\partial^2 \log |J(y)|}{\partial y^2}}.
 \item \strong{bounds_fun}: A function that takes the original distribution bounds and
 returns the transformed support bounds.
 \item \strong{valid_support}: A function that checks if the input distribution's support
 is mathematically compatible with the transformation.
 \item \strong{decreasing}: A logical value indicating if the transformation is
 monotonically decreasing (e.g., \eqn{1/X}).
-}
-}
-
-\section{Available Transformers}{
-
-\itemize{
-\item \code{\link{log_transform}}
-\item \code{\link{exp_transform}}
-\item \code{\link{logit_transform}}
-\item \code{\link{expit_transform}}
-\item \code{\link{softplus_transform}}
-\item \code{\link{inverse_transform}}
-\item \code{\link{sqrt_transform}}
-\item \code{\link{power_transform}}
-\item \code{\link{bc_transform}} (Box-Cox)
-\item \code{\link{yj_transform}} (Yeo-Johnson)
-\item \code{\link{affine_transform}}
 }
 }
 

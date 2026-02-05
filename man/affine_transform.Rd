@@ -22,7 +22,15 @@ Creates a transformer object for an affine linear transformation \eqn{Y = a + bX
 
 \strong{Inverse:} \eqn{X = (Y - \text{loc}) / \text{scale}}
 
-\strong{Jacobian:} \eqn{J = 1 / |\text{scale}|}
+\strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = 1 / \text{scale}}
+
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = 0}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = 0}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = 0}
 
 \strong{Support:} Defined for all \eqn{X \in \mathbb{R}}.
 }

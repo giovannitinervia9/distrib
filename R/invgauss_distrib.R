@@ -61,6 +61,10 @@
 #' Hessian (\code{expected = TRUE}) is recommended for more stable convergence.
 #' @return A list of class \code{"distrib"} containing the components for the Inverse-Gaussian distribution.
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{3}{2y} - \dfrac{y^2 - \mu^2}{2\phi\mu^2 y^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{3}{2y^2} - \dfrac{1}{\phi y^3}}
+#'
 #' @references
 #' Giner, G., and Smyth, G. K. (2016). statmod: Probability calculations for the inverse Gaussian distribution.
 #' \emph{R Journal} \strong{8}(1), 339-351. \url{https://journal.r-project.org/articles/RJ-2016-024/}
@@ -177,6 +181,17 @@ invgauss_distrib <- function(link_mu = log_link(), link_phi = log_link()) {
         mu_phi = -res / (phi2 * mu2 * mu)
       )
     }
+  }
+
+  o$grad_y <- function(y, theta) {
+    mu <- theta[[1]]
+    phi <- theta[[2]]
+    -1.5 / y - (y^2 - mu^2) / (2 * phi * mu^2 * y^2)
+  }
+
+  o$hess_y <- function(y, theta) {
+    phi <- theta[[2]]
+    1.5 / (y^2) - 1 / (phi * y^3)
   }
 
   o$kernel <- function(y, theta, log = TRUE) {

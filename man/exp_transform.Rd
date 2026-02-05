@@ -20,5 +20,12 @@ Useful for converting real-valued variables to positive ones.
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = \dfrac{1}{Y}}
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = -\dfrac{1}{y}}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = \dfrac{1}{y^2}}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = -\dfrac{1}{Y^2}}
 \strong{Support:} Defined for \eqn{X \in (-\infty, \infty)}. Maps to \eqn{Y \in (0, \infty)}.
 }

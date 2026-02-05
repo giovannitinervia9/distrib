@@ -52,6 +52,10 @@
 #' \deqn{\dfrac{\partial^2 \ell}{\partial (\sigma^2)^2} = -\dfrac{\mu}{(\sigma^2)^4} \left[ 2\mu\sigma^2\psi(\dfrac{\mu^2}{\sigma^2}) + \mu^3\psi_1\left(\dfrac{\mu^2}{\sigma^2}\right) + \sigma^2\left( -2\mu\log\left(\dfrac{\mu}{\sigma^2}\right) - 3\mu - 2\mu\log(y) + 2y \right) \right]}
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma^2} = \dfrac{1}{(\sigma^2)^3} \left[ 2\mu\sigma^2\psi(\dfrac{\mu^2}{\sigma^2}) + 2\mu^3\psi_1\left(\dfrac{\mu^2}{\sigma^2}\right) + \sigma^2\left( -2\mu\log\left(\dfrac{\mu}{\sigma^2}\right) - 3\mu - 2\mu\log(y) + y \right) \right]}
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = \dfrac{\mu^2/\sigma^2 - 1}{y} - \dfrac{\mu}{\sigma^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{\mu^2/\sigma^2 - 1}{y^2}}
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Gamma distribution.
 #'
 #' @importFrom linkfunctions log_link
@@ -184,6 +188,19 @@ gamma_distrib <- function(link_mu = log_link(), link_sigma2 = log_link()) {
       )
     }
   }
+
+  o$grad_y <- function(y, theta) {
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
+    ((mu^2 / sigma2) - 1) / y - (mu / sigma2)
+  }
+
+  o$hess_y <- function(y, theta) {
+    mu <- theta[[1]]
+    sigma2 <- theta[[2]]
+    -((mu^2 / sigma2) - 1) / y^2
+  }
+
 
   o$kernel <- function(y, theta, log = TRUE) {
     mu <- theta[[1]]

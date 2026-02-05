@@ -50,4 +50,8 @@ The Fisher Information matrix has a closed constant form:
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\dfrac{1}{3\sigma^2}}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \sigma^2}\right] = -\dfrac{3+\pi^2}{9\sigma^2}}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma}\right] = 0}
+
+\emph{Derivatives with respect to \eqn{y}:}
+\deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{1}{\sigma} \tanh\left(\dfrac{y-\mu}{2\sigma}\right)}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{1}{2\sigma^2} \text{sech}^2\left(\dfrac{y-\mu}{2\sigma}\right)}
 }

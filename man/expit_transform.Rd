@@ -18,7 +18,15 @@ Useful for mapping real-valued variables to the \eqn{(0, 1)} interval.
 
 \strong{Inverse:} \eqn{X = \text{logit}(Y)}
 
-\strong{Jacobian:} \eqn{J = \dfrac{1}{Y(1-Y)}}
+\strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = \dfrac{1}{Y(1-Y)}}
+
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{2y - 1}{y(1-y)}}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = \dfrac{1}{y^2} + \dfrac{1}{(1-y)^2}}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = \dfrac{2y-1}{y^2(1-y)^2}}
 
 \strong{Support:} Defined for \eqn{X \in \mathbb{R}}. Maps to \eqn{Y \in (0, 1)}.
 }

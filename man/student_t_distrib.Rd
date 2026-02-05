@@ -83,4 +83,8 @@ When \code{expected = FALSE}, the analytical second derivatives depend on observ
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \nu} = \dfrac{(y-\mu)\left[(y-\mu)^2 - \sigma^2\right]}{\left[\nu\sigma^2 + (y-\mu)^2\right]^2}}
 
 \deqn{\dfrac{\partial^2 \ell}{\partial \sigma \partial \nu} = \dfrac{(y-\mu)^2\left[(y-\mu)^2 - \sigma^2\right]}{\sigma\left[\nu\sigma^2 + (y-\mu)^2\right]^2}}
+
+\emph{Derivatives with respect to y:}
+\deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{(\nu+1)(y-\mu)}{\nu\sigma^2 + (y-\mu)^2}}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{(\nu+1)\left[(y-\mu)^2 - \nu\sigma^2\right]}{\left[\nu\sigma^2 + (y-\mu)^2\right]^2}}
 }

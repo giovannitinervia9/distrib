@@ -53,4 +53,8 @@ The derivatives of the log-pdf \eqn{\ell} with respect to the parameters are:
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu^2}\right] = -\tau}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \tau^2}\right] = -\dfrac{1}{2\tau^2}}
 \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \tau}\right] = 0}
+
+\emph{Derivatives with respect to \eqn{y}:}
+\deqn{\dfrac{\partial \ell}{\partial y} = -\tau(y - \mu)}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\tau}
 }

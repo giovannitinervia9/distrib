@@ -16,10 +16,6 @@ A list of class \code{"transformer"}.
 Creates a transformer object for the Softplus function.
 This transformation is used to map a non-negative random variable \eqn{X \in (0, \infty)}
 to the entire real line \eqn{Y \in \mathbb{R}}.
-
-Unlike the logarithmic/exponential transformation, the Softplus function approaches linearity
-for large values (\eqn{X \approx Y} as \eqn{Y \to \infty}), while behaving like an exponential
-near zero. This often results in better numerical stability for heavy-tailed distributions.
 }
 \details{
 \strong{Transformation (Inverse Softplus):} \eqn{Y = \dfrac{1}{a} \log(e^{aX} - 1)}
@@ -27,6 +23,14 @@ near zero. This often results in better numerical stability for heavy-tailed dis
 \strong{Inverse (Softplus):} \eqn{X = \dfrac{1}{a} \log(1 + e^{aY})}
 
 \strong{Jacobian:} \eqn{J = \text{sigmoid}(aY)}
+
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = a(1 - \text{plogis}(ay))}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -a^2 \text{dlogis}(ay)}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = a \cdot \text{dlogis}(ay)}
 
 \strong{Support:} Requires \eqn{X > 0}. Maps to \eqn{Y \in \mathbb{R}}.
 }

@@ -22,10 +22,18 @@ Creates a transformer object for the general power transformation \eqn{Y = X^p}.
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = \dfrac{1}{p} Y^{\dfrac{1}{p} - 1}}
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = (\frac{1}{p} - 1) \frac{1}{y}}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -(\frac{1}{p} - 1) \frac{1}{y^2}}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = \frac{1}{p}(\frac{1}{p} - 1) Y^{\frac{1}{p} - 2}}
+
 \strong{Support & Constraints:}
 \itemize{
 \item If \eqn{p} is a fractional value, \eqn{X} must be non-negative.
-\item If \eqn{p} is an even integer, the transformation is not monotonic on mixed domains (negative to positive). Support is restricted to \eqn{X \ge 0} or \eqn{X \le 0}.
+\item If \eqn{p} is an even integer, the transformation is not monotonic on mixed domains.
 \item If \eqn{p < 0}, the transformation is decreasing.
 }
 }

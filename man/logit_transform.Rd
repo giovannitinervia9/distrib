@@ -19,5 +19,13 @@ Creates a transformer object for the logit transformation \eqn{Y = \text{logit}(
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = X(1-X)} (corresponds to the PDF of the Logistic distribution).
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = 1 - 2\text{plogis}(y)}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -2\text{dlogis}(y)}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = \text{dlogis}(y)(1 - 2\text{plogis}(y))}
+
 \strong{Support:} Requires \eqn{X \in (0, 1)}.
 }

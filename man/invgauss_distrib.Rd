@@ -15,6 +15,10 @@ Defaults to \code{\link[linkfunctions]{log_link}} to ensure positivity.}
 }
 \value{
 A list of class \code{"distrib"} containing the components for the Inverse-Gaussian distribution.
+
+\emph{Derivatives with respect to \eqn{y}:}
+\deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{3}{2y} - \dfrac{y^2 - \mu^2}{2\phi\mu^2 y^2}}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{3}{2y^2} - \dfrac{1}{\phi y^3}}
 }
 \description{
 Creates a distribution object for the Inverse-Gaussian distribution parameterized by mean (\eqn{\mu}) and dispersion (\eqn{\phi}).

@@ -68,6 +68,10 @@
 #'
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \sigma \partial \nu} = \dfrac{(y-\mu)^2\left[(y-\mu)^2 - \sigma^2\right]}{\sigma\left[\nu\sigma^2 + (y-\mu)^2\right]^2}}
 #'
+#' \emph{Derivatives with respect to y:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{(\nu+1)(y-\mu)}{\nu\sigma^2 + (y-\mu)^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{(\nu+1)\left[(y-\mu)^2 - \nu\sigma^2\right]}{\left[\nu\sigma^2 + (y-\mu)^2\right]^2}}
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Student's t distribution.
 #'
 #' @importFrom linkfunctions identity_link log_link
@@ -215,6 +219,24 @@ student_t_distrib <- function(
         sigma_nu = (res4 - sigma2 * res2) / (sigma * (nu * sigma2 + res2)^2)
       )
     }
+  }
+
+  o$grad_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
+    res <- y - theta[[1]]
+    -((nu + 1) * res) / (nu * sigma^2 + res^2)
+  }
+
+  o$hess_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
+
+    res <- y - theta[[1]]
+    res2 <- res^2
+    nu_sigma2 <- nu * sigma^2
+
+    ((nu + 1) * (res2 - nu_sigma2)) / (nu_sigma2 + res2)^2
   }
 
   o$kernel <- function(y, theta, log = TRUE) {

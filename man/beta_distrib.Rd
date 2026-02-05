@@ -60,4 +60,8 @@ When \code{expected = TRUE}, the expected second derivatives (Fisher Information
 The diagonal terms are identical to the expected Hessian.
 The mixed term depends on \eqn{y}:
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \phi} = \log\left(\dfrac{y}{1-y}\right) - \psi(\mu\phi) + \psi((1-\mu)\phi) - \phi \left[ \mu\psi_1(\mu\phi) - (1-\mu)\psi_1((1-\mu)\phi) \right]}
+
+\emph{Derivatives with respect to \eqn{y}:}
+\deqn{\dfrac{\partial \ell}{\partial y} = \dfrac{\mu\phi - 1}{y} - \dfrac{(1-\mu)\phi - 1}{1-y}}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\left[ \dfrac{\mu\phi - 1}{y^2} + \dfrac{(1-\mu)\phi - 1}{(1-y)^2} \right]}
 }

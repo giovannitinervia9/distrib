@@ -84,4 +84,9 @@ When \code{expected = TRUE} inside \code{pseudohuber_distrib()$hessian()}, the e
 via the function \code{\link{mc_expected_hessian}}.
 Note that the location parameter \eqn{\mu} is orthogonal to the scale parameter \eqn{\sigma} and the shape parameter \eqn{\nu},
 since \eqn{\mathbb{E}(r) = \mathbb{E}(r^3) = 0}.
+
+\emph{Derivatives with respect to \eqn{y}:}
+\deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{y - \mu}{\sigma^2 D}}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{\nu}{\sigma^2 D^3}}
+where \eqn{D = \sqrt{\nu + \left(\frac{y-\mu}{\sigma}\right)^2}}.
 }

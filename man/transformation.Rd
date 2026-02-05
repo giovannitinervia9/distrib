@@ -57,6 +57,16 @@ gradient of the original distribution evaluated at the inverse-transformed point
 \eqn{\mathbb{E}[\nabla^2 \ell] = -\mathbb{E}[\nabla \ell (\theta)(\nabla \ell (\theta))^\top]}.
 }
 
+\strong{Derivatives with respect to \eqn{y}:}
+While the derivatives with respect to the parameters \eqn{\theta} remain unchanged (evaluated at \eqn{g^{-1}(y)}),
+the derivatives with respect to the observed variable \eqn{y} must account for the transformation
+via the chain rule. Let \eqn{x = g^{-1}(y)} and \eqn{J = \dfrac{dx}{dy}}:
+\itemize{
+\item \strong{Gradient:} \deqn{\dfrac{\partial \ell_Y}{\partial y} = \dfrac{\partial \ell_X}{\partial x} \cdot J + \dfrac{\partial \log |J|}{\partial y}}
+\item \strong{Hessian:} \deqn{\dfrac{\partial^2 \ell_Y}{\partial y^2} = \dfrac{\partial^2 \ell_X}{\partial x^2} \cdot J^2 + \dfrac{\partial \ell_X}{\partial x} \cdot \dfrac{d J}{d y} + \dfrac{\partial^2 \log |J|}{\partial y^2}}
+}
+where \eqn{\dfrac{d J}{d y}} is the second derivative of the inverse transformation (\code{trans_inv_hessian}).
+
 \strong{Numerical Stability:}
 The function includes safeguards for calculating the PDF in the tails:
 \itemize{

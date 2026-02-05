@@ -50,6 +50,10 @@
 #' \deqn{\dfrac{\partial^2 \ell}{\partial (\sigma^2)^2} = -\dfrac{(\log(y) - \mu)^2}{(\sigma^2)^3} + \dfrac{1}{2(\sigma^2)^2}}
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma^2} = -\dfrac{\log(y) - \mu}{(\sigma^2)^2}}
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{1}{y} \left( 1 + \dfrac{\log y - \mu}{\sigma^2} \right)}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{\log y - \mu}{\sigma^2 y^2}}
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Lognormal distribution.
 #'
 #' @importFrom linkfunctions identity_link log_link
@@ -164,6 +168,14 @@ lognormal_distrib <- function(link_mu = identity_link(), link_sigma2 = log_link(
         mu_sigma2 = -res / sigma22
       )
     }
+  }
+
+  o$grad_y <- function(y, theta) {
+    -(1 + (log(y) - theta[[1]]) / theta[[2]]) / y
+  }
+
+  o$hess_y <- function(y, theta) {
+    (log(y) - theta[[1]]) / (theta[[2]] * y^2)
   }
 
   o$kernel <- function(y, theta, log = TRUE) {

@@ -40,6 +40,10 @@
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \sigma^2}\right] = -\dfrac{3+\pi^2}{9\sigma^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma}\right] = 0}
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{1}{\sigma} \tanh\left(\dfrac{y-\mu}{2\sigma}\right)}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{1}{2\sigma^2} \text{sech}^2\left(\dfrac{y-\mu}{2\sigma}\right)}
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Logistic distribution.
 #'
 #' @importFrom linkfunctions identity_link log_link
@@ -159,6 +163,18 @@ logistic_distrib <- function(link_mu = identity_link(), link_sigma = log_link())
         mu_sigma = -(tanh_z + z_half * sech2_z) / sigma2
       )
     }
+  }
+
+  o$grad_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    -tanh(0.5 * (y - theta[[1]]) / sigma) / sigma
+  }
+
+  o$hess_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    tanh_z_half <- tanh(0.5 * (y - theta[[1]]) / sigma)
+    sech2_z_half <- 1 - tanh_z_half^2
+    -sech2_z_half / (2 * sigma^2)
   }
 
   o$kernel <- function(y, theta, log = TRUE) {

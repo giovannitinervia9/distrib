@@ -20,5 +20,12 @@ Useful for converting distributions defined on \eqn{(0, \infty)} to the real lin
 
 \strong{Jacobian:} \eqn{J = \dfrac{dX}{dY} = \exp(Y)}
 
+\strong{Log-Jacobian Derivatives:} #' \itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = 1}
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = 0}
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2} = \exp(Y)}
+
 \strong{Support:} Requires \eqn{X > 0}. Maps to \eqn{Y \in (-\infty, \infty)}.
 }

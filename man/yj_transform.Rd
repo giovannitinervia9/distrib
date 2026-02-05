@@ -22,5 +22,13 @@ Creates a transformer object for the Yeo-Johnson transformation, which extends B
 \item \eqn{X < 0}: Box-Cox of \eqn{|X|+1} with parameter \eqn{2-\lambda}, negated.
 }
 
+\strong{Log-Jacobian Derivatives:}
+\itemize{
+\item Gradient: \eqn{\dfrac{\partial \log|J|}{\partial y} = \dfrac{1-\lambda}{\lambda y + 1}} for \eqn{y \ge 0}, and \eqn{\dfrac{\lambda-1}{1-(2-\lambda)y}} for \eqn{y < 0}.
+\item Hessian: \eqn{\dfrac{\partial^2 \log|J|}{\partial y^2} = -\dfrac{\lambda(1-\lambda)}{(\lambda y + 1)^2}} for \eqn{y \ge 0}, and \eqn{\dfrac{(\lambda-1)(2-\lambda)}{(1-(2-\lambda)y)^2}} for \eqn{y < 0}.
+}
+
+\strong{Inverse Hessian:} \eqn{\dfrac{d^2 X}{d Y^2}} is computed piecewise based on the second derivative of the inverse Box-Cox components.
+
 \strong{Support:} Defined for all \eqn{X \in \mathbb{R}}.
 }

@@ -41,6 +41,10 @@
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \sigma^2}\right] = -\dfrac{1}{2\sigma^2}}
 #' \deqn{\mathbb{E}\left[\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma}\right] = 0}
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{2(y-\mu)}{\sigma^2 + (y-\mu)^2}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{2(y-\mu)^2 - 2\sigma^2}{(\sigma^2 + (y-\mu)^2)^2}}
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Cauchy distribution.
 #'
 #' @importFrom stats dcauchy pcauchy qcauchy rcauchy median IQR
@@ -155,6 +159,21 @@ cauchy_distrib <- function(link_mu = identity_link(), link_sigma = log_link()) {
         mu_sigma = -4 * sigma * res / (den2)
       )
     }
+  }
+
+  o$grad_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    res <- y - theta[[1]]
+    den <- sigma^2 + res^2
+    -(2 * res) / den
+  }
+
+  o$hess_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    res2 <- (y - theta[[1]])^2
+    sigma2 <- sigma^2
+    den2 <- (sigma2 + res2)^2
+    (2 * res2 - 2 * sigma2) / den2
   }
 
   o$kernel <- function(y, theta, log = TRUE) {

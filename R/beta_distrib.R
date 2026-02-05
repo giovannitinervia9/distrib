@@ -50,6 +50,10 @@
 #' The mixed term depends on \eqn{y}:
 #' \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \phi} = \log\left(\dfrac{y}{1-y}\right) - \psi(\mu\phi) + \psi((1-\mu)\phi) - \phi \left[ \mu\psi_1(\mu\phi) - (1-\mu)\psi_1((1-\mu)\phi) \right]}
 #'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = \dfrac{\mu\phi - 1}{y} - \dfrac{(1-\mu)\phi - 1}{1-y}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\left[ \dfrac{\mu\phi - 1}{y^2} + \dfrac{(1-\mu)\phi - 1}{(1-y)^2} \right]}
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Beta distribution.
 #'
 #' @importFrom linkfunctions logit_link log_link
@@ -196,6 +200,21 @@ beta_distrib <- function(link_mu = logit_link(), link_phi = log_link()) {
       phi_phi = hess_phi_phi,
       mu_phi = hess_mu_phi
     )
+  }
+
+  o$grad_y <- function(y, theta) {
+    mu <- theta[[1]]
+    phi <- theta[[2]]
+    ((mu * phi) - 1) / y - (((1 - mu) * phi) - 1) / (1 - y)
+  }
+
+  o$hess_y <- function(y, theta) {
+    mu <- theta[[1]]
+    phi <- theta[[2]]
+
+    alpha_minus_1 <- mu * phi - 1
+    beta_minus_1 <- (1 - mu) * phi - 1
+    -(alpha_minus_1 / y^2 + beta_minus_1 / (1 - y)^2)
   }
 
   o$kernel <- function(y, theta, log = TRUE) {

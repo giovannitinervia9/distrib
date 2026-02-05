@@ -69,6 +69,12 @@
 #' via the function \code{\link{mc_expected_hessian}}.
 #' Note that the location parameter \eqn{\mu} is orthogonal to the scale parameter \eqn{\sigma} and the shape parameter \eqn{\nu},
 #' since \eqn{\mathbb{E}(r) = \mathbb{E}(r^3) = 0}.
+#'
+#' \emph{Derivatives with respect to \eqn{y}:}
+#' \deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{y - \mu}{\sigma^2 D}}
+#' \deqn{\dfrac{\partial^2 \ell}{\partial y^2} = -\dfrac{\nu}{\sigma^2 D^3}}
+#' where \eqn{D = \sqrt{\nu + \left(\frac{y-\mu}{\sigma}\right)^2}}.
+#'
 #' @return A list of class \code{"distrib"} containing the components for the Pseudo-Huber distribution.
 #' @importFrom stats uniroot
 #' @export
@@ -207,6 +213,24 @@ pseudohuber_distrib <- function(link_mu = identity_link(), link_sigma = log_link
         sigma_nu = (-res^2) / (2 * sigma2 * sigma * den^3)
       )
     }
+  }
+
+  o$grad_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
+    res <- y - theta[[1]]
+    sigma2 <- sigma * sigma
+    den <- sqrt(nu + (res^2 / sigma2))
+    -res / (sigma2 * den)
+  }
+
+  o$hess_y <- function(y, theta) {
+    sigma <- theta[[2]]
+    nu <- theta[[3]]
+    res <- y - theta[[1]]
+    sigma2 <- sigma * sigma
+    den <- sqrt(nu + (res^2 / sigma2))
+    -nu / (sigma2 * den^3)
   }
 
 

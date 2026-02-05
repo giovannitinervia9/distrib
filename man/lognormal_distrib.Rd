@@ -60,4 +60,8 @@ When \code{expected = FALSE}, the full analytical second derivatives depend on o
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu^2} = -\dfrac{1}{\sigma^2}}
 \deqn{\dfrac{\partial^2 \ell}{\partial (\sigma^2)^2} = -\dfrac{(\log(y) - \mu)^2}{(\sigma^2)^3} + \dfrac{1}{2(\sigma^2)^2}}
 \deqn{\dfrac{\partial^2 \ell}{\partial \mu \partial \sigma^2} = -\dfrac{\log(y) - \mu}{(\sigma^2)^2}}
+
+\emph{Derivatives with respect to \eqn{y}:}
+\deqn{\dfrac{\partial \ell}{\partial y} = -\dfrac{1}{y} \left( 1 + \dfrac{\log y - \mu}{\sigma^2} \right)}
+\deqn{\dfrac{\partial^2 \ell}{\partial y^2} = \dfrac{\log y - \mu}{\sigma^2 y^2}}
 }
